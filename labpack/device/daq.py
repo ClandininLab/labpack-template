@@ -25,10 +25,10 @@ class DAQonServer(daq.DAQonServer):
     '''
     def setup_pulse_wave_stream_out(self, multicall:Optional[MyMultiCall]=None, **kwargs):
         if multicall is not None and isinstance(multicall, MyMultiCall):
-            multicall.target('daq').setup_pulse_wave_streamOut(**kwargs)
+            multicall.target('daq').setup_pulse_wave_stream_out(**kwargs)
             return multicall
         if self.manager is not None:
-            self.manager.target('daq').setup_pulse_wave_streamOut(**kwargs)
+            self.manager.target('daq').setup_pulse_wave_stream_out(**kwargs)
 
     def start_stream(self, multicall:Optional[MyMultiCall]=None, **kwargs):
         if multicall is not None and isinstance(multicall, MyMultiCall):
