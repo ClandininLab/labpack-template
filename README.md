@@ -50,3 +50,17 @@ below, and point stimpack at it — stimpack then loads your modules dynamically
 - **Binding**: stimpack's server binds loopback (`127.0.0.1`) by default, because the RPC control
   channel is unauthenticated. For a remote client, set the rig's address explicitly in that rig's
   server script and firewall the port to the trusted rig network.
+- **One protocol, several rigs.** The server tells the client which modules it has, so a protocol
+  can adapt instead of assuming the hardware:
+
+  ```python
+  if self.has_module('voltage_out') and self.epoch_protocol_parameters['opto_amp'] > 0:
+      multicall.target('voltage_out').setup_pulse_wave_stream_out(
+          channels_config={'name': self.opto['channel'], 'high': amp, 'low': 0.0}, ...)
+  ```
+
+  `voltage_out` is the module for anything driven by an output voltage — optogenetics, odor, reward,
+  shock. (`target('daq')` still works and maps to it, with a one-time deprecation warning.)
+  `has_module()` returns True when the server hasn't advertised, so adopting it changes nothing
+  until the server reports. What is *wired* to that voltage — an LED, a valve, on which channel — is
+  lab-specific: keep it in your own `rig_config` keys, as with the commented‑out `opto:` example.
