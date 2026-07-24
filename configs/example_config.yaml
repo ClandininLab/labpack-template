@@ -18,7 +18,13 @@ rig_config:  # One entry per rig; the GUI asks which one you are on at startup.
   Rig_w_local_server:  # The GUI launches a rig server script on this same machine.
     data_directory: /home/johndoe/Desktop
     screen_center: [0, 0]
+    # Hardware this rig has. Protocols read these (self.loco_available / self.daq_available) so ONE
+    # protocol can run on rigs with different hardware instead of needing a copy per rig:
+    #     if self.daq_available and self.epoch_protocol_parameters['opto_amp'] > 0:
+    #         multicall.target('daq').setup_pulse_wave_stream_out(...)
+    # Both default to True, so omitting them keeps existing behavior.
     loco_available: True
+    daq_available: True
     # The trigger class must be defined in your daq module (module_paths.daq below).
     # trigger: NIUSB6210(dev='Dev5', trigger_channel='ctr0')
     server_options:
