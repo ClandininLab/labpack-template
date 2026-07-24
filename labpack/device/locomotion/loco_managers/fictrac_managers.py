@@ -112,7 +112,10 @@ class FtClosedLoopManager(LocoClosedLoopManager):
         # Fictrac lines always starts with FT
         if toks.pop(0) != "FT":
             print('Bad read')
-            return None
+            # Return an empty dict, not None: callers store this as data_prev and take len() of it,
+            # so None would raise a TypeError on the next set_pos_0 / update_pos.
+            empty_dict: dict[str, float] = {}
+            return empty_dict
         
         frame_num = int(toks[self.ft_frame_num_idx])
         ts = float(toks[self.ft_timestamp_idx])

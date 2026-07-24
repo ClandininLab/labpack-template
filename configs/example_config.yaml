@@ -1,49 +1,55 @@
 experimenter: JohnDoe
-subject_metadata: # User can specify any metadata they want to collect about the subject and the options will appear on the GUI
-  species: [M. musculus, H. sapiens, D. melanogaster]
-  genotype: [PV-Cre, VIP-Cre, SST-Cre]
+
+subject_metadata:  # Any metadata you want to collect per subject; each becomes a dropdown in the GUI.
+                   # The GUI has built-ins for subject_id, age and notes.
+  species: [D. melanogaster, M. musculus, H. sapiens]
+  genotype: ['', PV-Cre, VIP-Cre, SST-Cre]  # an empty first entry means "no default selection"
   # sex: [Female, Male]
 
-rig_config:
-  Laptop:
+rig_config:  # One entry per rig; the GUI asks which one you are on at startup.
+
+  Laptop:  # Everything on one machine: the GUI starts its own local server.
     data_directory: /home/johndoe/Desktop
-    screen_center: [0, 0]
-    loco_available: True
-    server_options: 
+    screen_center: [0, 0]      # rig-specific offset added by protocol.adjust_center()
+    loco_available: False
+    server_options:
       use_remote_server: False
-      #'disp_server_id': [1,0], # Use if you need to specify a particular display server and id.
 
-  Other_w_local_server:
+  Rig_w_local_server:  # The GUI launches a rig server script on this same machine.
     data_directory: /home/johndoe/Desktop
     screen_center: [0, 0]
     loco_available: True
-    # trigger: NIUSB6210(dev='Dev5', trigger_channel='ctr0')  # This trigger class should be defined in your daq module
-    server_options: 
-      use_remote_server': False
-      local_server_path: server/ExampleServer.py
-      data_directory': /home/johndoe/Desktop
+    # The trigger class must be defined in your daq module (module_paths.daq below).
+    # trigger: NIUSB6210(dev='Dev5', trigger_channel='ctr0')
+    server_options:
+      use_remote_server: False
+      local_server_path: server/example_server.py   # relative to the labpack directory
 
-  Other_w_remote_server:
+  Rig_w_remote_server:  # The rig server already runs on another machine; the GUI connects to it.
     data_directory: /home/johndoe/Desktop
     screen_center: [0, 0]
     loco_available: True
-    # trigger: DAQonServer()
+    # trigger: DAQonServer()   # use when the DAQ hardware lives on the server machine
     server_options:
       use_remote_server: True
-      host: '0.0.0.0' # Note - default server address is '0.0.0.0' port 60629
+      host: '192.168.1.42'     # the RIG machine's address, as seen from this client
       port: 60629
-      data_directory: /home/johndoe_remote/Desktop
+      # Where the SERVER should write locomotion / position logs (a path on the rig machine).
+      data_directory: /data/johndoe/stimpack_data
 
 
-# To use non-default stimpack functions, set them here
-# Note, all paths relative to the labpack location specified in path_to_labpack.txt
-parameter_presets_dir: presets/mc  # directory where your parameter presets live
+# All paths below are relative to the labpack directory recorded in stimpack's path_to_labpack.txt
+parameter_presets_dir: presets/johndoe   # where your saved parameter presets live
 
-module_paths:  # relative to the labpack directory specified in stimpack.experiment's path_to_labpack.txt
-  protocol:  # module for user protocol classes. Can be a list of modules.
+module_paths:
+  protocol:  # user protocol classes; may be a list of modules
     - labpack/protocol/JohnDoe_protocol.py
-  data: labpack/data.py  # module for data class. Class name should be "Data". Only one module allowed.
-  client: labpack/client.py  # module for client class. Class name should be "Client". Only one module allowed.
-  daq: labpack/device/daq.py  # daq module. Only one module allowed.
-  visual_stim: # visual stim modules to be loaded on the server. Can be a list of modules.
+  data: labpack/data.py      # class must be named "Data".   Only one module.
+  client: labpack/client.py  # class must be named "Client". Only one module.
+  daq: labpack/device/daq.py # daq module.                   Only one module.
+  visual_stim:  # custom stimulus modules, exec'd on the SERVER; may be a list of directories
     - labpack/visual_stim/example
+
+# NOTE: custom stimuli belong under module_paths.visual_stim (above). An older layout put them in
+# server_options.visual_stim_module_paths -- current stimpack does NOT read that key, so stimuli
+# listed there are silently never loaded and referencing them fails with "0 stimulus candidates".

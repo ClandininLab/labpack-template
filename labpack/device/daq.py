@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+from typing import Optional
+
 from stimpack.device import daq
 from stimpack.rpc.multicall import MyMultiCall
 
@@ -15,35 +17,39 @@ import threading
 class DAQonServer(daq.DAQonServer):
     '''
     Dummy DAQ class for when the DAQ resides on the server, so that we can call methods as if the DAQ is on the client side.
-    Assumes that server has registered functions "daq_sendTrigger" and "daq_outputStep".
+
+    Calls are addressed to the server's 'daq' module with target('daq'), so the method names here are
+    just the driver's own method names (e.g. LabJackTSeries.start_stream). Note the older style --
+    an untargeted call to a "daq_"-prefixed name -- no longer works: untargeted requests are routed
+    to the server's root node, where those names are not registered, so they would silently do nothing.
     '''
-    def setup_pulse_wave_stream_out(self, multicall=None, **kwargs):
+    def setup_pulse_wave_stream_out(self, multicall:Optional[MyMultiCall]=None, **kwargs):
         if multicall is not None and isinstance(multicall, MyMultiCall):
-            multicall.daq_setup_pulse_wave_streamOut(**kwargs)
+            multicall.target('daq').setup_pulse_wave_streamOut(**kwargs)
             return multicall
         if self.manager is not None:
-            self.manager.daq_setup_pulse_wave_streamOut(**kwargs)
+            self.manager.target('daq').setup_pulse_wave_streamOut(**kwargs)
 
-    def start_stream(self, multicall=None, **kwargs):
+    def start_stream(self, multicall:Optional[MyMultiCall]=None, **kwargs):
         if multicall is not None and isinstance(multicall, MyMultiCall):
-            multicall.daq_start_stream(**kwargs)
+            multicall.target('daq').start_stream(**kwargs)
             return multicall
         if self.manager is not None:
-            self.manager.daq_start_stream(**kwargs)
+            self.manager.target('daq').start_stream(**kwargs)
 
-    def stop_stream(self, multicall=None, **kwargs):
+    def stop_stream(self, multicall:Optional[MyMultiCall]=None, **kwargs):
         if multicall is not None and isinstance(multicall, MyMultiCall):
-            multicall.daq_stop_stream(**kwargs)
+            multicall.target('daq').stop_stream(**kwargs)
             return multicall
         if self.manager is not None:
-            self.manager.daq_stop_stream(**kwargs)
+            self.manager.target('daq').stop_stream(**kwargs)
 
-    def stream_with_timing(self, multicall=None, **kwargs):
+    def stream_with_timing(self, multicall:Optional[MyMultiCall]=None, **kwargs):
         if multicall is not None and isinstance(multicall, MyMultiCall):
-            multicall.daq_stream_with_timing(**kwargs)
+            multicall.target('daq').stream_with_timing(**kwargs)
             return multicall
         if self.manager is not None:
-            self.manager.daq_stream_with_timing(**kwargs)
+            self.manager.target('daq').stream_with_timing(**kwargs)
 
 
 # %% National instruments USB daqs
