@@ -161,10 +161,10 @@ def main():
     if not moved_with_git:
         os.rename(old_dir, new_dir)
 
-    print(f"\nDone. Now:")
-    print(f"  pip install -e .          # reinstall under the new name")
-    print(f"  pip uninstall {old}" + " " * max(0, 12 - len(old)) + "# if it was installed before")
-    print(f"\nThen check it over: stimpack --check-labpack")
+    print("\nDone. Now:")
+    print(f"  pip uninstall {old}".ljust(38) + "# if it was installed under the old name")
+    print("  pip install -e .".ljust(38) + "# reinstall under the new one")
+    print("\nThen check it over:  stimpack --check-labpack")
 
 
 if __name__ == '__main__':
