@@ -48,12 +48,12 @@ parameter_presets_dir: presets/johndoe   # where your saved parameter presets li
 
 module_paths:
   protocol:  # user protocol classes; may be a list of modules
-    - labpack/protocol/JohnDoe_protocol.py
-  data: labpack/data.py      # class must be named "Data".   Only one module.
-  client: labpack/client.py  # class must be named "Client". Only one module.
-  daq: labpack/device/daq.py # daq module.                   Only one module.
+    - template_labpack/protocol/JohnDoe_protocol.py
+  data: template_labpack/data.py      # class must be named "Data".   Only one module.
+  client: template_labpack/client.py  # class must be named "Client". Only one module.
+  daq: template_labpack/device/daq.py # daq module.                   Only one module.
   visual_stim:  # custom stimulus modules, exec'd on the SERVER; may be a list of directories
-    - labpack/visual_stim/example
+    - template_labpack/visual_stim/example
 
 # NOTE: custom stimuli belong under module_paths.visual_stim (above). An older layout put them in
 # server_options.visual_stim_module_paths -- current stimpack does NOT read that key, so stimuli

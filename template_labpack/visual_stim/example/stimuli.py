@@ -9,7 +9,7 @@ from stimpack.visual_stim.stimuli import BaseProgram
 from stimpack.visual_stim.trajectory import make_as_trajectory, return_for_time_t
 from stimpack.visual_stim.distribution import make_as_distribution
 
-from labpack.visual_stim.example.shapes import GlIcosphere
+from template_labpack.visual_stim.example.shapes import GlIcosphere
 
 class MovingEllipsoid(BaseProgram):
     def __init__(self, screen):

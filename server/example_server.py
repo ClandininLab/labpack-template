@@ -71,7 +71,7 @@ def main():
     }
 
     # # # DAQ (optional) # # #
-    # Set daq_class to a DAQ subclass from labpack/device/daq.py (e.g. NIUSB6001, LabJackTSeries)
+    # Set daq_class to a DAQ subclass from template_labpack/device/daq.py (e.g. NIUSB6001, LabJackTSeries)
     # to send acquisition triggers / opto waveforms from this server.
     daq_class, daq_kwargs = None, {}
 

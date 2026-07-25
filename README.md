@@ -18,6 +18,16 @@ below, and point stimpack at it — stimpack then loads your modules dynamically
    ```
    Add hardware drivers only if the rig needs them: `pip install -e .[nidaq]` or `.[labjack]`.
 
+   The Python package here is called `template_labpack` rather than `labpack`, so it can be
+   installed side by side with a lab's own labpack. **Renaming it for your lab is encouraged**:
+   pick something unique (`smithlab_pack`), rename the `template_labpack/` directory, update
+   `name`/`packages` in `setup.py`, the `from template_labpack...` imports, and the
+   `module_paths` entries in your config.
+
+   Stimpack never imports this package by name. It resolves the directory recorded in
+   `path_to_labpack.txt` and loads your modules by file path, so the package name is yours to
+   choose — it only has to be consistent between `setup.py`, your imports, and `module_paths`.
+
 2. Launch the GUI (`stimpack`) and use **Labpack Dir** in the startup dialog to point at this
    directory. The choice is remembered in `path_to_labpack.txt` in stimpack's user config dir.
 
@@ -29,12 +39,12 @@ below, and point stimpack at it — stimpack then loads your modules dynamically
 | Path | What it is / what to edit |
 |---|---|
 | `configs/*.yaml` | Rig configs: experimenter, subject metadata fields, per-rig settings, and `module_paths`. **Start here.** |
-| `labpack/protocol/base_protocol.py` | Lab-wide protocol base. Put helpers shared by all your protocols here. |
-| `labpack/protocol/JohnDoe_protocol.py` | Example protocols. Rename to `<you>_protocol.py` and write your own; every `BaseProtocol` subclass appears in the GUI dropdown. |
-| `labpack/visual_stim/example/` | Custom stimuli, shapes, trajectories and distributions. These are exec'd **on the server**; subclasses of stimpack's `BaseProgram` / `Trajectory` / `Distribution` become usable by name. |
-| `labpack/device/daq.py` | DAQ drivers (NI, LabJack) and the `DAQonServer` proxy used when the DAQ lives on the rig machine. Referenced by the `trigger:` string in a rig config. |
-| `labpack/device/locomotion/` | Locomotion managers (e.g. FicTrac). Subclass stimpack's `LocoClosedLoopManager` and implement `_parse_line`. |
-| `labpack/client.py`, `labpack/data.py` | Empty passthroughs over stimpack's `BaseClient` / `BaseData` — override here if you need custom client behavior or a different data layout. |
+| `template_labpack/protocol/base_protocol.py` | Lab-wide protocol base. Put helpers shared by all your protocols here. |
+| `template_labpack/protocol/JohnDoe_protocol.py` | Example protocols. Rename to `<you>_protocol.py` and write your own; every `BaseProtocol` subclass appears in the GUI dropdown. |
+| `template_labpack/visual_stim/example/` | Custom stimuli, shapes, trajectories and distributions. These are exec'd **on the server**; subclasses of stimpack's `BaseProgram` / `Trajectory` / `Distribution` become usable by name. |
+| `template_labpack/device/daq.py` | DAQ drivers (NI, LabJack) and the `DAQonServer` proxy used when the DAQ lives on the rig machine. Referenced by the `trigger:` string in a rig config. |
+| `template_labpack/device/locomotion/` | Locomotion managers (e.g. FicTrac). Subclass stimpack's `LocoClosedLoopManager` and implement `_parse_line`. |
+| `template_labpack/client.py`, `template_labpack/data.py` | Empty passthroughs over stimpack's `BaseClient` / `BaseData` — override here if you need custom client behavior or a different data layout. |
 | `server/example_server.py` | Example rig server: screen geometry, locomotion, DAQ. Copy one per rig. |
 | `server/base_server.py` | Lab-wide server base; forwards everything to stimpack's `BaseServer`. |
 
