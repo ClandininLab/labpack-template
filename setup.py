@@ -4,7 +4,7 @@ setup(
     name='template_labpack',
     version='0.0.1',
     description='Lab-specific stimuli, protocols and rig configuration to be used with stimpack',
-    url='https://github.com/ClandininLab/labpack',
+    url='https://github.com/ClandininLab/labpack-template',
     author='Max Turner, Minseung Choi',
     author_email='mhturner@stanford.edu, minseung@stanford.edu',
     # find_packages() so subpackages (protocol, device, visual_stim, ...) are installed too;
