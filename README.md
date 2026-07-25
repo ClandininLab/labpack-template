@@ -1,38 +1,57 @@
-# Labpack
+# labpack-template
 
 A template for your lab-specific [Stimpack](https://github.com/ClandininLab/stimpack) configuration:
 rig configs, protocols, custom stimuli, and device drivers.
 
 [Stimpack documentation and quick start](https://stimpack.readthedocs.io/en/latest/)
 
-Stimpack itself ships no lab-specific configuration. You clone this repo, rename/edit the pieces
-below, and point stimpack at it — stimpack then loads your modules dynamically at runtime.
+Stimpack itself ships no lab-specific configuration. You make your own copy of this repo, rename
+and edit the pieces below, and point stimpack at it — stimpack then loads your modules dynamically
+at runtime.
 
 ## Getting started
 
-1. Clone this repo and install it (Python >= 3.10; `stimpack` is installed as a dependency):
+1. Press **Use this template** at the top of this page to create your lab's own repository, then
+   clone it. (You can make it **private** — rig configs, data paths and experimenter names usually
+   should be. A *fork* of a public repo cannot be private; a template copy can.)
+
    ```
-   git clone https://github.com/ClandininLab/labpack   # then rename it for your lab
-   cd labpack
+   git clone https://github.com/<your-org>/<your-labpack>
+   cd <your-labpack>
+   ```
+
+2. Rename the Python package for your lab, then install it (Python >= 3.10; `stimpack` comes as a
+   dependency):
+   ```
+   python scripts/rename_package.py smithlab_pack   # --dry-run first, to see what it will touch
    pip install -e .
    ```
    Add hardware drivers only if the rig needs them: `pip install -e .[nidaq]` or `.[labjack]`.
 
-   The Python package here is called `template_labpack` rather than `labpack`, so it can be
-   installed side by side with a lab's own labpack. **Renaming it for your lab is encouraged**:
-   pick something unique (`smithlab_pack`), rename the `template_labpack/` directory, update
-   `name`/`packages` in `setup.py`, the `from template_labpack...` imports, and the
-   `module_paths` entries in your config.
+   The package here is called `template_labpack` so it can be installed side by side with an
+   existing labpack. Renaming it means yours can be too — and that a traceback says whose code it
+   is in. The script updates the four places that have to agree: the package directory,
+   `name`/`packages` in `setup.py`, the `from template_labpack...` imports, and the `module_paths`
+   entries in every config.
 
-   Stimpack never imports this package by name. It resolves the directory recorded in
-   `path_to_labpack.txt` and loads your modules by file path, so the package name is yours to
-   choose — it only has to be consistent between `setup.py`, your imports, and `module_paths`.
+   Stimpack never imports your labpack by name. It resolves the directory recorded in
+   `path_to_labpack.txt` and loads your modules by file path, so the name is yours to choose.
 
-2. Launch the GUI (`stimpack`) and use **Labpack Dir** in the startup dialog to point at this
+3. Launch the GUI (`stimpack`) and use **Labpack Dir** in the startup dialog to point at this
    directory. The choice is remembered in `path_to_labpack.txt` in stimpack's user config dir.
 
-3. Copy `configs/example_config.yaml` to `configs/<yourlab>_config.yaml` and edit it. It appears in
+4. Copy `configs/example_config.yaml` to `configs/<yourlab>_config.yaml` and edit it. It appears in
    the startup dialog's config dropdown.
+
+### Keeping up with the template
+
+A template copy shares no git history with this repo, so there is no `git pull` from it. When
+stimpack changes how labpacks talk to it, the way to find out is to run stimpack's labpack check
+against your copy rather than to diff against the template:
+
+```
+stimpack --check-labpack        # validates this labpack against the installed stimpack
+```
 
 ## What's here
 

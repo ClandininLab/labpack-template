@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-
-@author: mhturner
+An example protocol file defining visual stimulus protocols.
+The protocols defined here can be imported in experiment configuration files.
 """
 
 from template_labpack.protocol import base_protocol
