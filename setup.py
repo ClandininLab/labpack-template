@@ -26,6 +26,8 @@ setup(
         # Hardware drivers: only needed on rigs that have that hardware, so not core dependencies.
         'nidaq': ['nidaqmx'],
         'labjack': ['labjack-ljm'],
+        'lightcrafter': ['hid'],      # TI DLPC350 projectors, over USB HID
+        'test': ['pytest'],
     },
     include_package_data=True,
     zip_safe=False,

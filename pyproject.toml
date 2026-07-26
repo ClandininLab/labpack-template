@@ -1,0 +1,10 @@
+# Packaging metadata lives in setup.py; this file holds tool configuration.
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+pythonpath = ["."]        # so tests import the labpack package without installing it first
+addopts = "-ra"
+markers = [
+    "hardware: needs a real rig (projector, DAQ, tracker). Not run in CI.",
+]

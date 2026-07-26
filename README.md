@@ -43,6 +43,20 @@ at runtime.
 4. Copy `configs/example_config.yaml` to `configs/<yourlab>_config.yaml` and edit it. It appears in
    the startup dialog's config dropdown.
 
+## Tests
+
+```shell
+pip install -e .[test]
+pytest
+```
+
+A labpack holds the rig-specific code, so it holds the rig-specific mistakes, and those are the ones
+that cost an experiment. More is testable without hardware than it looks: `tests/` ships with a
+worked example that checks the projector's pattern LUT against TI's documentation without a
+projector. See `tests/README.md`.
+
+GitHub Actions runs them on 3.10 to 3.12 (`.github/workflows/test.yml`).
+
 ### Keeping up with the template
 
 A template copy shares no git history with this repo, so there is no `git pull` from it. When
@@ -62,10 +76,12 @@ stimpack --check-labpack        # validates this labpack against the installed s
 | `template_labpack/protocol/JohnDoe_protocol.py` | Example protocols. Rename to `<you>_protocol.py` and write your own; every `BaseProtocol` subclass appears in the GUI dropdown. |
 | `template_labpack/visual_stim/example/` | Custom stimuli, shapes, trajectories and distributions. These are exec'd **on the server**; subclasses of stimpack's `BaseProgram` / `Trajectory` / `Distribution` become usable by name. |
 | `template_labpack/device/daq.py` | DAQ drivers (NI, LabJack) and the `DAQonServer` proxy used when the DAQ lives on the rig machine. Referenced by the `trigger:` string in a rig config. |
+| `template_labpack/device/dlpc350.py` | TI DLPC350 projectors (LightCrafter 4500 and the optical engines built on it). Sets pattern mode, LED currents, and can display the three colour channels of a frame as successive patterns — a 120 Hz link driving the DMD at 360 Hz. |
 | `template_labpack/device/locomotion/` | Locomotion managers (e.g. FicTrac). Subclass stimpack's `LocoClosedLoopManager` and implement `_parse_line`. |
 | `template_labpack/client.py`, `template_labpack/data.py` | Empty passthroughs over stimpack's `BaseClient` / `BaseData` — override here if you need custom client behavior or a different data layout. |
 | `server/example_server.py` | Example rig server: screen geometry, locomotion, DAQ. Copy one per rig. |
 | `server/base_server.py` | Lab-wide server base; forwards everything to stimpack's `BaseServer`. |
+| `tests/` | Your tests. Hardware drivers can be stubbed and the bytes they would send checked against the manufacturer's documentation, with no rig attached — see `tests/README.md`. |
 
 ## Notes
 
