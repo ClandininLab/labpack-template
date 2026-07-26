@@ -5,6 +5,12 @@ rig configs, protocols, custom stimuli, and device drivers.
 
 [Stimpack documentation and quick start](https://stimpack.readthedocs.io/en/latest/)
 
+Worth reading before writing protocols, since they cover the things a labpack gets wrong quietly:
+[modules and targeting](https://stimpack.readthedocs.io/en/latest/modules_and_targets.html) (an
+untargeted call goes to the server's root node, not to every module),
+[checking a labpack](https://stimpack.readthedocs.io/en/latest/check_labpack.html), and
+[how a run ended](https://stimpack.readthedocs.io/en/latest/run_outcomes.html).
+
 Stimpack itself ships no lab-specific configuration. You make your own copy of this repo, rename
 and edit the pieces below, and point stimpack at it — stimpack then loads your modules dynamically
 at runtime.
