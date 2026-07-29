@@ -3,12 +3,18 @@
 """
 Starting point for a lab-specific data class. Nothing here is wired up.
 
-module_paths.data is commented out in the example config on purpose: naming a data module
-overrides `data_format` entirely -- stimpack uses your class and never consults the setting, so
-the startup dialog's format choice silently does nothing and you get this class's format
-whatever was picked. Subclass BaseData (HDF5, series/trials), data.LegacyHdf5Data (the pre-0.3
-epoch_runs/epochs layout) or data_nwb.NWBData (a directory of .nwb files), then point the
-config here -- and expect its data_format to be ignored from then on.
+module_paths.data is commented out in the example config on purpose: naming ONE data module
+fixes the format, because the class it subclasses is what decides it -- so `data_format` and the
+startup dialog's choice stop being consulted and you get this class's format whatever was
+picked. Subclass BaseData (HDF5, series/trials), data.LegacyHdf5Data (the pre-0.3
+epoch_runs/epochs layout) or data_nwb.NWBData (a directory of .nwb files).
+
+To keep the format selectable, map one class per format in the config instead:
+
+    module_paths:
+      data:
+        hdf5: template_labpack/data.py
+        nwb:  template_labpack/data_nwb.py
 """
 
 from stimpack.experiment import data
