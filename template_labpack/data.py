@@ -15,6 +15,15 @@ To keep the format selectable, map one class per format in the config instead:
       data:
         hdf5: template_labpack/data.py
         nwb:  template_labpack/data_nwb.py
+
+A `:ClassName` suffix picks a class out of a module, so overrides shared between the two HDF5
+layouts can live in one mixin next to both classes rather than in two near-empty modules:
+
+    class _Lab:
+        ...your overrides...
+
+    class Data(_Lab, data.BaseData): pass
+    class DataLegacy(_Lab, data_legacy.LegacyHdf5Data): pass
 """
 
 from stimpack.experiment import data

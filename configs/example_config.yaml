@@ -68,6 +68,14 @@ module_paths:
   #     data:
   #       hdf5: template_labpack/data.py
   #       nwb:  template_labpack/data_nwb.py
+  #
+  #   A `:ClassName` suffix picks a class out of a module, so one file can hold them all. Useful
+  #   for the two HDF5 layouts, which differ only in the group names they write:
+  #
+  #     data:
+  #       hdf5:        template_labpack/data.py:Data
+  #       legacy_hdf5: template_labpack/data.py:DataLegacy
+  #       nwb:         template_labpack/data_nwb.py
   client: template_labpack/client.py  # class must be named "Client". Only one module.
   daq: template_labpack/device/daq.py # daq module.                   Only one module.
   visual_stim:  # custom stimulus modules, exec'd on the SERVER; may be a list of directories
