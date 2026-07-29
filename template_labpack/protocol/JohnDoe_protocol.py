@@ -24,20 +24,20 @@ class DriftingSquareGrating(BaseProtocol):
         self.run_parameters = self.get_run_parameter_defaults()
         self.protocol_parameters = self.get_protocol_parameter_defaults()
 
-    def get_epoch_parameters(self):
-        super().get_epoch_parameters()
+    def get_trial_parameters(self):
+        super().get_trial_parameters()
         
-        center = self.adjust_center(self.epoch_protocol_parameters['center'])
+        center = self.adjust_center(self.trial_protocol_parameters['center'])
         centerX = center[0]
         centerY = center[1]
 
-        self.epoch_stim_parameters = {'name': 'RotatingGrating',
-                                      'period': self.epoch_protocol_parameters['period'],
-                                      'rate': self.epoch_protocol_parameters['rate'],
+        self.trial_stim_parameters = {'name': 'RotatingGrating',
+                                      'period': self.trial_protocol_parameters['period'],
+                                      'rate': self.trial_protocol_parameters['rate'],
                                       'color': [1, 1, 1, 1],
-                                      'mean': self.epoch_protocol_parameters['mean'],
-                                      'contrast': self.epoch_protocol_parameters['contrast'],
-                                      'angle': self.epoch_protocol_parameters['angle'],
+                                      'mean': self.trial_protocol_parameters['mean'],
+                                      'contrast': self.trial_protocol_parameters['contrast'],
+                                      'angle': self.trial_protocol_parameters['angle'],
                                       'offset': 0.0,
                                       'cylinder_radius': 1,
                                       'cylinder_height': 10,
@@ -59,7 +59,7 @@ class DriftingSquareGrating(BaseProtocol):
                 }
 
     def get_run_parameter_defaults(self):
-        return {'num_epochs': 40,
+        return {'num_trials': 40,
                 'idle_color': 0.5,
                 'all_combinations': True,
                 'randomize_order': True}
@@ -73,10 +73,10 @@ class MovingEllipsoid(BaseProtocol):
         self.run_parameters = self.get_run_parameter_defaults()
         self.protocol_parameters = self.get_protocol_parameter_defaults()
 
-    def get_epoch_parameters(self):
-        super().get_epoch_parameters()
+    def get_trial_parameters(self):
+        super().get_trial_parameters()
 
-        stim_time = self.epoch_protocol_parameters['stim_time']
+        stim_time = self.trial_protocol_parameters['stim_time']
 
         x_trajectory = {'name': 'TVPairs',
                         'tv_pairs': [(0, -2), (stim_time, 2)],
@@ -98,11 +98,11 @@ class MovingEllipsoid(BaseProtocol):
                             'tv_pairs': [(0, 0), (stim_time, 0)],
                             'kind': 'linear'}
 
-        self.epoch_stim_parameters = {'name': 'MovingEllipsoid',
-                            'x_length': self.epoch_protocol_parameters['dimensions'][0],
-                            'y_length': self.epoch_protocol_parameters['dimensions'][1],
-                            'z_length': self.epoch_protocol_parameters['dimensions'][2],
-                            'color': self.epoch_protocol_parameters['color'],
+        self.trial_stim_parameters = {'name': 'MovingEllipsoid',
+                            'x_length': self.trial_protocol_parameters['dimensions'][0],
+                            'y_length': self.trial_protocol_parameters['dimensions'][1],
+                            'z_length': self.trial_protocol_parameters['dimensions'][2],
+                            'color': self.trial_protocol_parameters['color'],
                             'x': x_trajectory,
                             'y': y_trajectory,
                             'z': z_trajectory,
@@ -121,7 +121,7 @@ class MovingEllipsoid(BaseProtocol):
                 }
 
     def get_run_parameter_defaults(self):
-        return {'num_epochs': 2,
+        return {'num_trials': 2,
                 'idle_color': 0.5,
                 'all_combinations': True,
                 'randomize_order': True}
