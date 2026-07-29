@@ -1,5 +1,13 @@
 experimenter: JohnDoe
 
+# Which storage backend to write. Also selectable in the startup dialog, which starts from
+# whatever is set here.
+#   hdf5         one .hdf5 file per experiment (default)
+#   legacy_hdf5  the same, in the pre-0.3 layout: epoch_runs/series_001/epochs/epoch_001
+#   nwb          a DIRECTORY per experiment, holding one .nwb file per series
+# Ignored if module_paths.data below names your own data class -- see the note there.
+data_format: hdf5
+
 subject_metadata:  # Any metadata you want to collect per subject; each becomes a dropdown in the GUI.
                    # The GUI has built-ins for subject_id, age and notes.
   species: [D. melanogaster, M. musculus, H. sapiens]
@@ -49,7 +57,11 @@ parameter_presets_dir: presets/johndoe   # where your saved parameter presets li
 module_paths:
   protocol:  # user protocol classes; may be a list of modules
     - template_labpack/protocol/JohnDoe_protocol.py
-  data: template_labpack/data.py      # class must be named "Data".   Only one module.
+  # data: template_labpack/data.py    # class must be named "Data".   Only one module.
+  #   Commented out on purpose. Naming a data module here overrides `data_format` entirely --
+  #   stimpack uses your class and never consults the setting, so the startup dialog's format
+  #   choice silently does nothing. Leave this off until your class actually overrides
+  #   something; template_labpack/data.py as shipped adds nothing to stimpack's own.
   client: template_labpack/client.py  # class must be named "Client". Only one module.
   daq: template_labpack/device/daq.py # daq module.                   Only one module.
   visual_stim:  # custom stimulus modules, exec'd on the SERVER; may be a list of directories
