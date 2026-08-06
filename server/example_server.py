@@ -87,6 +87,45 @@ def main():
     #   manager.target('root').hello_server()
     server.register_function_on_root(lambda: print("Hello, Server! From Client"), "hello_server")
 
+    # # # Subframe multiplexing (optional) # # #
+    # A projector that reads a video frame's colour channels as successive patterns turns a 120 Hz
+    # link into a 240/360 Hz monochrome display. stimpack renders that; putting the projector into
+    # the matching mode is this script's job, since which projector is attached is a property of the
+    # rig. Full explanation, including the limits: stimpack's docs, "Subframe multiplexing".
+    #
+    # Left commented because template_labpack.device.dlpc350 imports `hid`, which is only installed
+    # on a machine with the projector attached -- an import here would break this example server for
+    # everyone else. Uncomment on a rig that has one.
+    #
+    # Register it as ONE function that sets both halves. Setting them separately is the mistake this
+    # shape exists to prevent: when the projector and the renderer disagree, the result is not an
+    # error but a plausible-looking wrong stimulus, and scrambled motion is still motion.
+    #
+    # from stimpack.visual_stim.screen import channel_names
+    # from template_labpack.device.dlpc350 import make_dlpc350_objects
+    #
+    # dlpc350_objects = make_dlpc350_objects()
+    #
+    # def set_subframes(n, leds='white', channel_order=(0, 1, 2)):
+    #     # channel_order is one permutation with two readings: the renderer takes channel indices,
+    #     # because a colour write mask is positional, and the projector takes names. Deriving one
+    #     # from the other here is what stops them being transposed.
+    #     channels = ('blue',) if n == 1 else channel_names(channel_order[:n])
+    #     dlpc350_objects[0].pattern_mode(fps=120, channels=channels, leds=leds)
+    #     for screen_manager in server.modules['visual'].screen_managers:
+    #         screen_manager.set_subframes(n, channel_order=channel_order)
+    #
+    # server.register_function_on_root(set_subframes, "set_subframes")
+    #
+    # Call it from a protocol, between trials only, and guarded so protocols still run on rigs
+    # without a projector:
+    #     if self.has_server_function('set_subframes'):
+    #         self.manager.target('root').set_subframes(3)
+    #
+    # Then commission the rig with stimpack's SubframeTimingCheck protocol and a high-speed camera
+    # or a photodiode on the corner square. Nothing in software can check that the projector is
+    # really unpacking the patterns.
+
     # Start the server loop (blocks).
     server.loop()
 

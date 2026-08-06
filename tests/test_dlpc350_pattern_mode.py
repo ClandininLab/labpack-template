@@ -154,6 +154,53 @@ def test_nonsense_channel_lists_are_rejected(projector, channels, reason):
         projector.pattern_mode(fps=120, channels=channels)
 
 
+# --- fewer than three, for a rig with two usable LEDs or one wanting a longer exposure ------------
+
+def test_two_channels_split_the_frame_in_two(projector):
+    """Three is the ceiling, not the only option: the LUT and the timing follow len(channels)."""
+    projector.pattern_mode(fps=120, channels=('red', 'green'))
+
+    assert commands(projector, 0x31) == [[1, 0x01, 1, 0]], 'two entries, two patterns per frame'
+    entries = lut_entries(projector)
+    assert len(entries) == 2
+    assert [decode(e)['pattern_number'] for e in entries] == [1, 0]
+    assert [decode(e)['buffer_swap'] for e in entries] == [False, True]
+
+    exposure, period = split_timing(commands(projector, 0x29)[0])
+    assert exposure == period == pytest.approx(1e6 / 240, abs=1)
+
+
+# --- keeping the projector and the renderer in step -----------------------------------------------
+
+@pytest.mark.parametrize('subframes, order, expected', [
+    (3, (0, 1, 2), ['red', 'green', 'blue']),
+    (3, (2, 0, 1), ['blue', 'red', 'green']),
+    (2, (2, 1, 0), ['blue', 'green']),
+])
+def test_the_renderer_and_the_projector_agree_on_the_order(projector, subframes, order, expected):
+    """The permutation is one decision held in two vocabularies -- stimpack in channel indices,
+    because a colour write mask is positional, and the projector in names. Transposing them
+    reorders timepoints in time and raises nothing, since scrambled motion is still motion, so
+    the rig derives one from the other and this checks they meet.
+    """
+    screen_module = pytest.importorskip('stimpack.visual_stim.screen')
+    if not hasattr(screen_module.Screen, 'subframe_channel_names'):
+        pytest.skip('stimpack predates Screen.subframe_channel_names')
+    screen = screen_module.Screen(subframes=subframes, refresh_rate=120,
+                                  subframe_channel_order=order)
+
+    projector.pattern_mode(fps=120, channels=screen.subframe_channel_names())
+
+    by_number = {number: name for name, number in DLPC350.EIGHT_BIT_PATTERNS.items()}
+    displayed = [by_number[decode(e)['pattern_number']] for e in lut_entries(projector)]
+
+    written = [screen_module.CHANNEL_NAMES[i]
+               for mask in screen.subframe_color_masks()
+               for i, writable in enumerate(mask[:3]) if writable]
+
+    assert displayed == written == expected
+
+
 # --- choosing the illumination -------------------------------------------------------------------
 
 def test_magenta_at_360_hz(projector):
