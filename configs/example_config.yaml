@@ -57,6 +57,11 @@ parameter_presets_dir: presets/johndoe   # where your saved parameter presets li
 module_paths:
   protocol:  # user protocol classes; may be a list of modules
     - template_labpack/protocol/JohnDoe_protocol.py
+    # Rig commissioning and diagnostic protocols that ship with stimpack but are not loaded by
+    # default (SubframeTimingCheck, ScreenAlignmentCheck, ProjectorCenterBeam, ServerErrorDemo).
+    # Uncomment while setting a rig up or hunting a fault; the stimpack: prefix resolves against
+    # wherever stimpack is installed, so the line is correct on every machine.
+    # - stimpack:experiment/diagnostics_protocol.py
   # data: template_labpack/data.py    # class must be named "Data".
   #   Commented out on purpose -- template_labpack/data.py as shipped adds nothing to stimpack's
   #   own class, and naming ONE data module fixes the format (the class's base decides it), so
