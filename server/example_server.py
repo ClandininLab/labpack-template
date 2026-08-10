@@ -21,7 +21,7 @@ class ExampleServer(BaseServer):
 
 
 # Screen geometry is a property of the rig, not of the server object, so it lives here as a plain
-# function rather than a method (see todo.txt).
+# function rather than a method.
 # pa/pb/pc are the physical corners of the display in meters, relative to the subject at the origin:
 # pa = lower-left, pb = lower-right, pc = upper-left, as seen by the subject. viewport_* place that
 # face on the display device in normalized device coordinates, so several faces can share a display.
@@ -57,10 +57,32 @@ def main():
                         square_size=(0.25, 0.25), name='Aux')
     visual_stim_kwargs = {'screens': [aux_screen]}
 
+    # # # Curved screen (optional) # # #
+    # A hemisphere or cylinder screen lit by a projector cannot be described by flat SubScreens.
+    # stimpack's curved path instead takes the screen surface's shape plus the projector's pose and
+    # optics, and renders through a cube map. Uncomment on a rig with such a screen -- and replace
+    # the numbers, which are stimpack's placeholders and describe no real rig: measure the
+    # projector's position and read its throw ratio off its data sheet, then check the result with
+    # stimpack.visual_stim.draw.draw_curved_screen().
+    #
+    # from stimpack.visual_stim.curved_screen import CurvedScreen, PinholeProjector, SphericalSurface
+    #
+    # surface = SphericalSurface(radius=0.15, elevation_range=(0, 90))     # an upper-hemisphere bowl
+    # projector = PinholeProjector(position=(0, 0, 0.30),                  # meters, in the rig frame
+    #                              throw_ratio=0.5, aspect_ratio=1.6)      # aimed at the origin by default
+    # bowl_screen = CurvedScreen(surface=surface, projector=projector,
+    #                            display_index=1, fullscreen=True, vsync=True, name='Bowl')
+    # visual_stim_kwargs = {'screens': [aux_screen, bowl_screen]}
+    #
+    # Do NOT set horizontal_flip for rear projection here: that flag only reaches get_perspective,
+    # which is the planar path, so on a curved screen it is silently inert -- and it is also not
+    # needed, because the mesh carries, per vertex, both where the point lands in the projector
+    # image and which direction it lies in from the subject, so rear projection is described
+    # exactly by the geometry.
+
     # # # Locomotion (optional) # # #
     # KeyTrac is a keyboard-driven stand-in for a real tracker -- handy for testing without hardware.
-    # For a real rig, swap in your own LocoClosedLoopManager subclass (e.g. a FicTrac manager) and
-    # give it that tracker's host/port.
+    # For a real rig, swap in your own LocoClosedLoopManager subclass; a FicTrac example follows below.
     loco_class = KeytracClosedLoopManager
     loco_kwargs = {
         'host': '127.0.0.1',
@@ -69,6 +91,29 @@ def main():
         'kt_py_fn': os.path.join(ROOT_DIR, 'device', 'locomotion', 'keytrac', 'keytrac.py'),
         'relative_control': True,
     }
+
+    # FicTrac wiring, using this labpack's own manager (template_labpack/device/locomotion/).
+    # Left commented because it launches the fictrac binary at the paths below, which only exist
+    # on a machine with FicTrac installed. Uncomment on a rig that has one, replacing the two
+    # paths, and delete the KeyTrac assignment above.
+    #
+    # from template_labpack.device.locomotion.loco_managers.fictrac_managers import FtClosedLoopManager
+    #
+    # loco_class = FtClosedLoopManager
+    # loco_kwargs = {
+    #     'host':             '127.0.0.1',
+    #     'port':             33334,                              # must match out_port in the FicTrac config
+    #     'ft_bin':           '/path/to/fictrac/bin/fictrac',
+    #     'ft_config':        '/path/to/fictrac/config.txt',
+    #     # Column indices into FicTrac's output lines, matching its data_header.txt: integrated
+    #     # animal heading (theta) and integrated x/y position, plus frame counter and timestamp.
+    #     # These are the columns _parse_line in fictrac_managers.py reads.
+    #     'ft_theta_idx':     16,
+    #     'ft_x_idx':         14,
+    #     'ft_y_idx':         15,
+    #     'ft_frame_num_idx': 0,
+    #     'ft_timestamp_idx': 21,
+    # }
 
     # # # DAQ (optional) # # #
     # Set daq_class to a DAQ subclass from template_labpack/device/daq.py (e.g. NIUSB6001, LabJackTSeries)
@@ -88,7 +133,7 @@ def main():
     server.register_function_on_root(lambda: print("Hello, Server! From Client"), "hello_server")
 
     # # # Subframe multiplexing (optional) # # #
-    # A projector that reads a video frame's colour channels as successive patterns turns a 120 Hz
+    # A projector that reads a video frame's color channels as successive patterns turns a 120 Hz
     # link into a 240/360 Hz monochrome display. stimpack renders that; putting the projector into
     # the matching mode is this script's job, since which projector is attached is a property of the
     # rig. Full explanation, including the limits: stimpack's docs, "Subframe multiplexing".
@@ -108,7 +153,7 @@ def main():
     #
     # def set_subframes(n, leds='white', channel_order=(0, 1, 2)):
     #     # channel_order is one permutation with two readings: the renderer takes channel indices,
-    #     # because a colour write mask is positional, and the projector takes names. Deriving one
+    #     # because a color write mask is positional, and the projector takes names. Deriving one
     #     # from the other here is what stops them being transposed.
     #     channels = ('blue',) if n == 1 else channel_names(channel_order[:n])
     #     dlpc350_objects[0].pattern_mode(fps=120, channels=channels, leds=leds)

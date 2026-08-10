@@ -26,6 +26,10 @@ at runtime.
    cd <your-labpack>
    ```
 
+   Staying a git checkout pays off directly: stimpack stamps the labpack's current commit into
+   every data file it records (with a `.dirty` marker when the tree has uncommitted changes), so
+   committing before recording is what makes an experiment answerable a year later.
+
 2. Rename the Python package for your lab, then install it (Python >= 3.10; `stimpack` comes as a
    dependency):
    ```
@@ -78,11 +82,12 @@ stimpack --check-labpack        # validates this labpack against the installed s
 | Path | What it is / what to edit |
 |---|---|
 | `configs/*.yaml` | Rig configs: experimenter, subject metadata fields, per-rig settings, and `module_paths`. **Start here.** |
+| `presets/johndoe/` | Saved parameter presets, one YAML file per protocol — the GUI's **Save preset** writes here, and a worked example ships in `DriftingSquareGrating.yaml`. Ensembles — ordered queues of (protocol, preset) pairs the GUI runs back to back — are saved as `.spens` files, plain YAML lists of those pairs, and reference presets by name. |
 | `template_labpack/protocol/base_protocol.py` | Lab-wide protocol base. Put helpers shared by all your protocols here. |
 | `template_labpack/protocol/JohnDoe_protocol.py` | Example protocols. Rename to `<you>_protocol.py` and write your own; every `BaseProtocol` subclass appears in the GUI dropdown. |
 | `template_labpack/visual_stim/example/` | Custom stimuli, shapes, trajectories and distributions. These are exec'd **on the server**; subclasses of stimpack's `BaseProgram` / `Trajectory` / `Distribution` become usable by name. |
 | `template_labpack/device/daq.py` | DAQ drivers (NI, LabJack) and the `DAQonServer` proxy used when the DAQ lives on the rig machine. Referenced by the `trigger:` string in a rig config. |
-| `template_labpack/device/dlpc350.py` | TI DLPC350 projectors (LightCrafter 4500 and the optical engines built on it). Sets pattern mode, LED currents, and can display the three colour channels of a frame as successive patterns — a 120 Hz link driving the DMD at 360 Hz. |
+| `template_labpack/device/dlpc350.py` | TI DLPC350 projectors (LightCrafter 4500 and the optical engines built on it). Sets pattern mode, LED currents, and can display the three color channels of a frame as successive patterns — a 120 Hz link driving the DMD at 360 Hz. |
 | `template_labpack/device/locomotion/` | Locomotion managers (e.g. FicTrac). Subclass stimpack's `LocoClosedLoopManager` and implement `_parse_line`. |
 | `template_labpack/client.py`, `template_labpack/data.py` | Empty passthroughs over stimpack's `BaseClient` / `BaseData` — override here if you need custom client behavior or a different data layout. |
 | `server/example_server.py` | Example rig server: screen geometry, locomotion, DAQ. Copy one per rig. |
@@ -95,7 +100,7 @@ stimpack --check-labpack        # validates this labpack against the installed s
   used `server_options.visual_stim_module_paths`; current stimpack does not read that key, so
   stimuli listed there are never loaded and referencing them fails with "0 stimulus candidates".
 - **Protocols reference stimuli by class name**, not by import, e.g.
-  `self.epoch_stim_parameters = {'name': 'MovingPatch', ...}`. The name is resolved on the server
+  `self.trial_stim_parameters = {'name': 'MovingPatch', ...}`. The name is resolved on the server
   against every loaded `BaseProgram` subclass — so a stimulus is available as soon as its module is
   loaded, with no registration step.
 - **Binding**: stimpack's server binds loopback (`127.0.0.1`) by default, because the RPC control
@@ -105,13 +110,18 @@ stimpack --check-labpack        # validates this labpack against the installed s
   can adapt instead of assuming the hardware:
 
   ```python
-  if self.has_module('voltage_out') and self.epoch_protocol_parameters['opto_amp'] > 0:
-      multicall.target('voltage_out').setup_pulse_wave_stream_out(
-          channels_config={'name': self.opto['channel'], 'high': amp, 'low': 0.0}, ...)
+  amp = self.trial_protocol_parameters['opto_amp']
+  if amp > 0:
+      self.voltage_out(multicall).setup_pulse_wave_stream_out(
+          output_channel=self.opto['channel'], freq=2.0, amp=amp, pulse_width=0.1)
   ```
 
   `voltage_out` is the module for anything driven by an output voltage — optogenetics, odor, reward,
   shock. (`target('daq')` still works and maps to it, with a one-time deprecation warning.)
-  `has_module()` returns True when the server hasn't advertised, so adopting it changes nothing
-  until the server reports. What is *wired* to that voltage — an LED, a valve, on which channel — is
-  lab-specific: keep it in your own `rig_config` keys, as with the commented‑out `opto:` example.
+  `self.voltage_out(...)` is a helper in `base_protocol.py`: on a rig that has the module it is
+  just `target('voltage_out')`, and on one that does not it returns a stand-in that drops the
+  calls — saying so once per run instead of warning on every request. It decides using
+  `has_module()`, which returns True when the server hasn't advertised its modules, so adopting it
+  changes nothing until the server reports. What is *wired* to that voltage — an LED, a valve, on
+  which channel — is lab-specific: keep it in your own `rig_config` keys, as with the
+  commented‑out `opto:` example.

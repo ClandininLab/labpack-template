@@ -1,0 +1,29 @@
+# Saved parameter presets for the DriftingSquareGrating protocol -- one file per protocol, named
+# <ProtocolName>.yaml, in the directory the config's parameter_presets_dir points at. The GUI's
+# "Save preset" button writes these (and will rewrite this file, dropping these comments); each
+# top-level key appears in the GUI's "Param preset" dropdown. Presets are versioned with the
+# labpack on purpose: "the parameters we ran last month" becomes a selection, not a reconstruction.
+#
+# A preset need not be complete -- parameters it omits keep the protocol's defaults (with a warning
+# naming each one), so presets saved before a protocol grew a parameter still load.
+#
+# The !!python/tuple tag below is not decoration. A protocol parameter given as a LIST of more than
+# one value takes a different value each trial (angle below runs four directions); a TUPLE is one
+# value with components (center is a single location). Writing center as [0, 0] would not lose a
+# type -- it would turn one centered grating into two trials at different positions.
+four_directions_fast:
+  run_parameters:
+    num_trials: 20
+    idle_color: 0.5
+    all_combinations: true
+    randomize_order: true
+  protocol_parameters:
+    pre_time: 1.0
+    stim_time: 2.0
+    tail_time: 1.0
+    period: 20.0
+    rate: 40.0
+    contrast: 1.0
+    mean: 0.5
+    angle: [0.0, 90.0, 180.0, 270.0]
+    center: !!python/tuple [0, 0]
