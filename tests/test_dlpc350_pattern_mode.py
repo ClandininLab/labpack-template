@@ -132,7 +132,7 @@ def test_buffer_swap_happens_once_per_video_frame(projector):
 
 
 def test_every_pattern_is_lit_the_same_way(projector):
-    """Each channel is a slice of time, not a colour, so they must all use the same LED."""
+    """Each channel is a slice of time, not a color, so they must all use the same LED."""
     projector.pattern_mode(fps=120, red=False, green=False, blue=True,
                            channels=('green', 'red', 'blue'))
     led_selects = {decode(e)['led_select'] for e in lut_entries(projector)}
@@ -179,7 +179,7 @@ def test_two_channels_split_the_frame_in_two(projector):
 ])
 def test_the_renderer_and_the_projector_agree_on_the_order(projector, subframes, order, expected):
     """The permutation is one decision held in two vocabularies -- stimpack in channel indices,
-    because a colour write mask is positional, and the projector in names. Transposing them
+    because a color write mask is positional, and the projector takes names. Transposing them
     reorders timepoints in time and raises nothing, since scrambled motion is still motion, so
     the rig derives one from the other and this checks they meet.
     """
@@ -246,7 +246,7 @@ def test_the_old_flags_still_work_on_their_own(projector):
 
 
 def test_illumination_and_channels_are_independent(projector):
-    """A channel is data, not colour: showing the red channel under a blue LED is normal."""
+    """A channel is data, not color: showing the red channel under a blue LED is normal."""
     projector.pattern_mode(fps=120, leds='blue', channels=('red',))
     entry = decode(lut_entries(projector)[0])
     assert entry['pattern_number'] == 1, 'pattern 1 reads R7..R0'

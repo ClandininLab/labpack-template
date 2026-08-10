@@ -128,7 +128,7 @@ class DLPC350:
     # Which 8-bit slice of the incoming 24-bit frame each pattern number selects.
     # DLPC350 Programmer's Guide (DLPU010G) Table 2-70, "Pattern Number Mapping", 8-BIT column:
     #     0 -> G7..G0     1 -> R7..R0     2 -> B7..B0
-    # so at 8-bit depth there are exactly three patterns in a frame, one per colour channel.
+    # so at 8-bit depth there are exactly three patterns in a frame, one per color channel.
     EIGHT_BIT_PATTERNS = {'green': 0, 'red': 1, 'blue': 2}
 
     # Named LED combinations, Table 2-69 byte 1 bits 6:4 (b0 red, b1 green, b2 blue).
@@ -149,11 +149,11 @@ class DLPC350:
         """Put the projector in video-pattern mode.
 
         Two independent things are being chosen here, and they are easy to confuse because both are
-        named after colours:
+        named after colors:
 
-          `leds`     which LEDs light the DMD -- the colour the animal sees
-          `channels` which colour channels of the video frame are read as successive patterns --
-                     data, not colour
+          `leds`     which LEDs light the DMD -- the color the animal sees
+          `channels` which color channels of the video frame are read as successive patterns --
+                     data, not color
 
         They are not coupled. Displaying the red channel does not require the red LED, and under
         multiplexing it usually should not: each channel is a slice of time, and every slice is lit
@@ -162,7 +162,7 @@ class DLPC350:
             pattern_mode(fps=120, leds='magenta', channels=('red', 'green', 'blue'))
 
         Each 8-bit channel becomes a separate pattern, so a 120 Hz video link drives the DMD at
-        360 Hz. Pass one channel (the default) for the original single-pattern behaviour.
+        360 Hz. Pass one channel (the default) for the original single-pattern behavior.
 
         :param fps: rate of the incoming video link, e.g. 120
         :param leds: 'magenta', 'white', 'blue', ... or an iterable like ('red', 'blue'). Overrides
@@ -177,7 +177,7 @@ class DLPC350:
             if isinstance(leds, str):
                 if leds not in self.LED_COMBINATIONS:
                     raise ValueError(f'unknown LED combination {leds!r}; expected one of '
-                                     f'{sorted(self.LED_COMBINATIONS)}, or an iterable of colours')
+                                     f'{sorted(self.LED_COMBINATIONS)}, or an iterable of colors')
                 chosen = self.LED_COMBINATIONS[leds]
             else:
                 chosen = tuple(leds)

@@ -6,50 +6,56 @@ from typing import Optional
 from stimpack.device import daq
 from stimpack.rpc.multicall import MyMultiCall
 
-import nidaqmx
-
-from labjack import ljm
 import numpy as np
 import time
 import threading
+
+# NOTE: the vendor imports (nidaqmx, labjack ljm) live inside the classes that use them, not up
+# here. Stimpack imports this whole module on every client start -- before it knows whether the
+# rig config names a trigger at all -- so a module-level vendor import would crash the client on
+# any machine without that vendor's driver installed (a laptop, or a rig with only the other
+# vendor's hardware). The extras are per rig on purpose: pip install -e .[nidaq] / .[labjack].
 
 # %%
 class DAQonServer(daq.DAQonServer):
     '''
     Dummy DAQ class for when the DAQ resides on the server, so that we can call methods as if the DAQ is on the client side.
 
-    Calls are addressed to the server's 'daq' module with target('daq'), so the method names here are
-    just the driver's own method names (e.g. LabJackTSeries.start_stream). Note the older style --
-    an untargeted call to a "daq_"-prefixed name -- no longer works: untargeted requests are routed
-    to the server's root node, where those names are not registered, so they would silently do nothing.
+    Calls are addressed to the server's 'voltage_out' module with target('voltage_out'), so the
+    method names here are just the driver's own method names (e.g. LabJackTSeries.start_stream).
+    'voltage_out' is the current name of what used to be called the 'daq' module; target('daq')
+    still resolves to it, but with a one-time deprecation warning. Note the even older style -- an
+    untargeted call to a "daq_"-prefixed name -- no longer works at all: untargeted requests are
+    routed to the server's root node, where those names are not registered, so they would silently
+    do nothing.
     '''
     def setup_pulse_wave_stream_out(self, multicall:Optional[MyMultiCall]=None, **kwargs):
         if multicall is not None and isinstance(multicall, MyMultiCall):
-            multicall.target('daq').setup_pulse_wave_stream_out(**kwargs)
+            multicall.target('voltage_out').setup_pulse_wave_stream_out(**kwargs)
             return multicall
         if self.manager is not None:
-            self.manager.target('daq').setup_pulse_wave_stream_out(**kwargs)
+            self.manager.target('voltage_out').setup_pulse_wave_stream_out(**kwargs)
 
     def start_stream(self, multicall:Optional[MyMultiCall]=None, **kwargs):
         if multicall is not None and isinstance(multicall, MyMultiCall):
-            multicall.target('daq').start_stream(**kwargs)
+            multicall.target('voltage_out').start_stream(**kwargs)
             return multicall
         if self.manager is not None:
-            self.manager.target('daq').start_stream(**kwargs)
+            self.manager.target('voltage_out').start_stream(**kwargs)
 
     def stop_stream(self, multicall:Optional[MyMultiCall]=None, **kwargs):
         if multicall is not None and isinstance(multicall, MyMultiCall):
-            multicall.target('daq').stop_stream(**kwargs)
+            multicall.target('voltage_out').stop_stream(**kwargs)
             return multicall
         if self.manager is not None:
-            self.manager.target('daq').stop_stream(**kwargs)
+            self.manager.target('voltage_out').stop_stream(**kwargs)
 
     def stream_with_timing(self, multicall:Optional[MyMultiCall]=None, **kwargs):
         if multicall is not None and isinstance(multicall, MyMultiCall):
-            multicall.target('daq').stream_with_timing(**kwargs)
+            multicall.target('voltage_out').stream_with_timing(**kwargs)
             return multicall
         if self.manager is not None:
-            self.manager.target('daq').stream_with_timing(**kwargs)
+            self.manager.target('voltage_out').stream_with_timing(**kwargs)
 
 
 # %% National instruments USB daqs
@@ -63,6 +69,7 @@ class NIUSB6001(daq.DAQ):
         self.trigger_channel = trigger_channel
 
     def send_trigger(self):
+        import nidaqmx  # local so machines without NI drivers can still import this module
         with nidaqmx.Task() as task:
             task.do_channels.add_do_chan('{}/{}'.format(self.dev, self.trigger_channel))
             task.start()
@@ -79,6 +86,7 @@ class NIUSB6210(daq.DAQ):
         self.trigger_channel = trigger_channel
 
     def send_trigger(self):
+        import nidaqmx  # local so machines without NI drivers can still import this module
         with nidaqmx.Task() as task:
             task.co_channels.add_co_pulse_chan_time('{}/{}'.format(self.dev, self.trigger_channel),
                                                     low_time=0.002,
@@ -86,6 +94,7 @@ class NIUSB6210(daq.DAQ):
             task.start()
 
     def output_step(self, output_channel='ctr1', low_time=0.001, high_time=0.100, initial_delay=0.00):
+        import nidaqmx  # local so machines without NI drivers can still import this module
         with nidaqmx.Task() as task:
             task.co_channels.add_co_pulse_chan_time('{}/{}'.format(self.dev, output_channel),
                                                     low_time=low_time,
@@ -109,15 +118,21 @@ class LabJackTSeries(daq.DAQ):
         self.init_device()
 
     def init_device(self):
+        # Imported here rather than at module top so this file stays importable on machines
+        # without the LabJack driver -- see the note above the class definitions. Kept on self so
+        # every other method can reach it without re-importing.
+        from labjack import ljm
+        self.ljm = ljm
+
         # Initialize ljm T4/T7 handle
-        self.handle = ljm.openS("TSERIES", "ANY", "ANY" if self.serial_number is None else self.serial_number)
-        self.info = ljm.getHandleInfo(self.handle)
+        self.handle = self.ljm.openS("TSERIES", "ANY", "ANY" if self.serial_number is None else self.serial_number)
+        self.info = self.ljm.getHandleInfo(self.handle)
         self.deviceType = self.info[0]
         self.serial_number = self.info[2]
 
         self.is_open = True
 
-        if self.deviceType == ljm.constants.dtT4:
+        if self.deviceType == self.ljm.constants.dtT4:
             # LabJack T4 configuration
 
             # All analog input ranges are +/-1 V, stream settling is 0 (default) and
@@ -126,16 +141,16 @@ class LabJackTSeries(daq.DAQ):
             aValues = [10.0, 0, 0]
 
             # Configure FIO4 to FIO7 as digital I/O.
-            ljm.eWriteName(self.handle, "DIO_INHIBIT", 0xFFF0F)
-            ljm.eWriteName(self.handle, "DIO_ANALOG_ENABLE", 0x00000)
+            self.ljm.eWriteName(self.handle, "DIO_INHIBIT", 0xFFF0F)
+            self.ljm.eWriteName(self.handle, "DIO_ANALOG_ENABLE", 0x00000)
         else:
             # LabJack T7 and other devices configuration
 
             # Ensure triggered stream is disabled.
-            ljm.eWriteName(self.handle, "STREAM_TRIGGER_INDEX", 0)
+            self.ljm.eWriteName(self.handle, "STREAM_TRIGGER_INDEX", 0)
 
             # Enabling internally-clocked stream.
-            ljm.eWriteName(self.handle, "STREAM_CLOCK_SOURCE", 0)
+            self.ljm.eWriteName(self.handle, "STREAM_CLOCK_SOURCE", 0)
 
             # All analog input ranges are +/-1 V, stream settling is 6
             # and stream resolution index is 0 (default).
@@ -145,13 +160,13 @@ class LabJackTSeries(daq.DAQ):
         # Write the analog inputs' negative channels (when applicable), ranges,
         # stream settling time and stream resolution configuration.
         numFrames = len(aNames)
-        ljm.eWriteNames(self.handle, numFrames, aNames, aValues)
+        self.ljm.eWriteNames(self.handle, numFrames, aNames, aValues)
 
     def set_trigger_channel(self, trigger_channel):
         self.trigger_channel = trigger_channel
 
     def write(self, names, vals):
-        ljm.eWriteNames(self.handle, len(names), names, vals)
+        self.ljm.eWriteNames(self.handle, len(names), names, vals)
 
     def send_trigger(self, trigger_channel=None, trigger_duration=0.05):
         if trigger_channel is None:
@@ -211,11 +226,11 @@ class LabJackTSeries(daq.DAQ):
                 value = 0
             else:
                 value = 0
-            ljm.eWriteName(self.handle, output_channel, value)
+            self.ljm.eWriteName(self.handle, output_channel, value)
             time.sleep(dt)
 
     def set_analog_output_to_zero(self, output_channel='DAC0'):
-        ljm.eWriteName(self.handle, output_channel, 0)
+        self.ljm.eWriteName(self.handle, output_channel, 0)
 
     def setup_periodic_stream_out(self, output_channel='DAC0', waveform=[0], streamOutIndex=0, scanRate=5000):
         """
@@ -225,7 +240,7 @@ class LabJackTSeries(daq.DAQ):
         waveform: (V) waveform to output repeatedly
         scanRate: (Hz) sampling rate of waveform
         """
-        ljm.periodicStreamOut(self.handle, streamOutIndex, ljm.nameToAddress(output_channel)[0], scanRate, len(waveform), waveform)
+        self.ljm.periodicStreamOut(self.handle, streamOutIndex, self.ljm.nameToAddress(output_channel)[0], scanRate, len(waveform), waveform)
 
     def setup_pulse_wave_stream_out(self, output_channel='DAC0', freq=1, amp=2.5, pulse_width=0.1, streamOutIndex=0, scanRate=5000):
         """
@@ -245,12 +260,12 @@ class LabJackTSeries(daq.DAQ):
         self.setup_periodic_stream_out(output_channel=output_channel, waveform=waveform, scanRate=scanRate)
 
     def start_stream(self, scanListNames=["STREAM_OUT0"], scanRate=5000, scansPerRead=1000):
-        scanList = ljm.namesToAddresses(len(scanListNames), scanListNames)[0]
-        actualScanRate = ljm.eStreamStart(self.handle, scansPerRead, len(scanList), scanList, scanRate)
+        scanList = self.ljm.namesToAddresses(len(scanListNames), scanListNames)[0]
+        actualScanRate = self.ljm.eStreamStart(self.handle, scansPerRead, len(scanList), scanList, scanRate)
 
     def stop_stream(self):
-        ljm.eStreamStop(self.handle)
-        ljm.eWriteName(self.handle, self.stream_output_channel, 0)
+        self.ljm.eStreamStop(self.handle)
+        self.ljm.eWriteName(self.handle, self.stream_output_channel, 0)
 
     def stream_with_timing(self, scanListNames=["STREAM_OUT0"], scanRate=5000, scansPerRead=1000, pre_time=0.5, stim_time=1):
         def timing_helper():
@@ -276,10 +291,10 @@ class LabJackTSeries(daq.DAQ):
 
         self.setup_periodic_stream_out(output_channel=output_channel, waveform=waveform, scanRate=scanRate)
         time.sleep(pre_time)
-        actualScanRate = ljm.eStreamStart(self.handle, scansPerRead, 1, [ljm.nameToAddress("STREAM_OUT0")[0]], scanRate)
+        actualScanRate = self.ljm.eStreamStart(self.handle, scansPerRead, 1, [self.ljm.nameToAddress("STREAM_OUT0")[0]], scanRate)
         time.sleep(stim_time)
-        ljm.eStreamStop(self.handle)
-        ljm.eWriteName(self.handle, output_channel, 0)
+        self.ljm.eStreamStop(self.handle)
+        self.ljm.eWriteName(self.handle, output_channel, 0)
 
     def square_wave(self, output_channel='DAC0', pre_time=0.5, stim_time=1, freq=1, amp=2.5, scanRate=5000, scansPerRead = 1000):
         """
@@ -318,5 +333,5 @@ class LabJackTSeries(daq.DAQ):
 
     def close(self):
         if self.is_open:
-            ljm.close(self.handle)
+            self.ljm.close(self.handle)
             self.is_open = False

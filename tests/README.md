@@ -16,7 +16,7 @@ and `labjack` can be stubbed out and the *bytes* a driver would send checked aga
 manufacturer's documentation — see `test_dlpc350_pattern_mode.py`, which verifies the projector's
 pattern LUT without a projector. A LUT with its fields in the wrong bits still validates and still
 plays; it just displays something other than what was meant, which is exactly the kind of error
-that is invisible until someone analyses the data.
+that is invisible until someone analyzes the data.
 
 Protocols can be checked too, and `stimpack --check-labpack --deep` already does much of it: it
 imports every protocol, runs it against a recording manager, and reports stimulus names that will
