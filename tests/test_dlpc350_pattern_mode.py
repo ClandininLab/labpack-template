@@ -20,7 +20,7 @@ import pytest
 # hid is only present on a machine with the projector attached, and importing the driver needs it.
 sys.modules.setdefault('hid', types.ModuleType('hid'))
 
-from template_labpack.dlpc350 import DLPC350  # noqa: E402
+from template_labpack.device.dlpc350 import DLPC350  # noqa: E402
 
 
 @pytest.fixture
