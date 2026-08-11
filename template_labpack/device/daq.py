@@ -3,7 +3,7 @@
 
 from typing import Optional
 
-from stimpack.device import daq
+from stimpack import daq
 from stimpack.rpc.multicall import MyMultiCall
 
 import numpy as np

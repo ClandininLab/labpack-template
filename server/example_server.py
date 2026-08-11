@@ -6,11 +6,8 @@ and then runs the socket server that a client/GUI connects to.
 Run it directly:      python server/example_server.py
 Or point a config at it:  rig_config.<rig>.server_options.local_server_path: server/example_server.py
 """
-import os
-import sys
 
-from stimpack.device.locomotion.loco_managers.keytrac_managers import KeytracClosedLoopManager
-from stimpack.util import ROOT_DIR
+from stimpack.locomotion.keytrac import KeytracClosedLoopManager
 from stimpack.visual_stim.screen import Screen, SubScreen
 
 from base_server import BaseServer
@@ -87,8 +84,7 @@ def main():
     loco_kwargs = {
         'host': '127.0.0.1',
         'port': 33335,
-        'python_bin': sys.executable,
-        'kt_py_fn': os.path.join(ROOT_DIR, 'device', 'locomotion', 'keytrac', 'keytrac.py'),
+        # python_bin and kt_py_fn are omitted: the defaults are this interpreter and the app stimpack ships.
         'relative_control': True,
     }
 

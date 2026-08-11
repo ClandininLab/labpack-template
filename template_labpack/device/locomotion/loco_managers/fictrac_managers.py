@@ -6,7 +6,7 @@ import shutil
 from time import sleep
 import numpy as np
 
-from stimpack.device.locomotion.loco_managers import LocoManager, LocoClosedLoopManager
+from stimpack.locomotion import LocoManager, LocoClosedLoopManager
 
 FT_FRAME_NUM_IDX = 0
 FT_X_IDX = 14
