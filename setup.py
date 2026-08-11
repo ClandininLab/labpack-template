@@ -7,7 +7,7 @@ setup(
     url='https://github.com/ClandininLab/labpack-template',
     author='Max Turner, Minseung Choi',
     author_email='mhturner@stanford.edu, minseung@stanford.edu',
-    # find_packages() so subpackages (protocol, device, visual_stim, ...) are installed too;
+    # find_packages() so subpackages (protocol, locomotion, visual_stim, ...) are installed too;
     # packages=['template_labpack'] would install only the top-level directory.
     #
     # The package is named template_labpack, not labpack, so that it can be installed alongside a

@@ -88,12 +88,12 @@ def main():
         'relative_control': True,
     }
 
-    # FicTrac wiring, using this labpack's own manager (template_labpack/device/locomotion/).
+    # FicTrac wiring, using this labpack's own manager (template_labpack/locomotion/).
     # Left commented because it launches the fictrac binary at the paths below, which only exist
     # on a machine with FicTrac installed. Uncomment on a rig that has one, replacing the two
     # paths, and delete the KeyTrac assignment above.
     #
-    # from template_labpack.device.locomotion.loco_managers.fictrac_managers import FtClosedLoopManager
+    # from template_labpack.locomotion.fictrac import FtClosedLoopManager
     #
     # loco_class = FtClosedLoopManager
     # loco_kwargs = {
@@ -112,7 +112,7 @@ def main():
     # }
 
     # # # DAQ (optional) # # #
-    # Set daq_class to a DAQ subclass from template_labpack/device/daq.py (e.g. NIUSB6001, LabJackTSeries)
+    # Set daq_class to a DAQ subclass from template_labpack/daq.py (e.g. NIUSB6001, LabJackTSeries)
     # to send acquisition triggers / opto waveforms from this server.
     daq_class, daq_kwargs = None, {}
 
@@ -134,7 +134,7 @@ def main():
     # the matching mode is this script's job, since which projector is attached is a property of the
     # rig. Full explanation, including the limits: stimpack's docs, "Subframe multiplexing".
     #
-    # Left commented because template_labpack.device.dlpc350 imports `hid`, which is only installed
+    # Left commented because template_labpack.dlpc350 imports `hid`, which is only installed
     # on a machine with the projector attached -- an import here would break this example server for
     # everyone else. Uncomment on a rig that has one.
     #
@@ -143,7 +143,7 @@ def main():
     # error but a plausible-looking wrong stimulus, and scrambled motion is still motion.
     #
     # from stimpack.visual_stim.screen import channel_names
-    # from template_labpack.device.dlpc350 import make_dlpc350_objects
+    # from template_labpack.dlpc350 import make_dlpc350_objects
     #
     # dlpc350_objects = make_dlpc350_objects()
     #
