@@ -29,6 +29,10 @@ rig_config:  # One entry per rig; the GUI asks which one you are on at startup.
     data_directory: /home/johndoe/Desktop
     screen_center: [0, 0]
     loco_available: True
+    # audio_available: True   # promise a sound card, so protocols can branch on it before a server
+    #                         # is connected. Needs pip install stimpack[audio] plus PortAudio
+    #                         # system-side; --check-labpack warns when a machine cannot keep the
+    #                         # promise.
 
     # Anything else here is yours: stimpack passes rig_config through untouched, so put rig-specific
     # hardware details in your own keys and read them in your labpack protocol. Stimpack knows the
@@ -87,6 +91,10 @@ module_paths:
   daq: template_labpack/daq/__init__.py  # daq module.                   Only one module.
   visual_stim:  # custom stimulus modules, exec'd on the SERVER; may be a list of directories
     - template_labpack/visual_stim/example
+  audio_stim:  # custom sound classes, sent to the server's audio module; may be a list of directories
+    - template_labpack/audio
+    # Safe to keep even though the template starts without a sound card: sounds load only on rigs
+    # whose server has an audio module, and a silent rig skips this entry without a warning.
 
 # NOTE: custom stimuli belong under module_paths.visual_stim (above). An older layout put them in
 # server_options.visual_stim_module_paths -- current stimpack does NOT read that key, so stimuli

@@ -116,13 +116,24 @@ def main():
     # to send acquisition triggers / opto waveforms from this server.
     daq_class, daq_kwargs = None, {}
 
+    # # # Audio (optional) # # #
+    # A sound card driven from protocols as target('audio'). Left off by default on purpose:
+    # with no audio module registered, audio calls report warnings instead of pretending to
+    # play. Uncomment on a rig with a card and the audio extra installed
+    # (pip install stimpack[audio], plus PortAudio system-side). stimpack's own local server
+    # probes the default output and enables this automatically; a rig server opts in explicitly.
+    audio_class, audio_kwargs = None, {}
+    # from stimpack.audio import PyAudioManager
+    # audio_class, audio_kwargs = PyAudioManager, {}
+
     # # # Server # # #
     # host: stimpack defaults to loopback (127.0.0.1) since the RPC channel is unauthenticated.
     # For a remote client, pass this rig's own network address and firewall the port.
     server = ExampleServer(host='127.0.0.1', port=60629,
                            visual_stim_kwargs=visual_stim_kwargs,
                            loco_class=loco_class, loco_kwargs=loco_kwargs,
-                           daq_class=daq_class, daq_kwargs=daq_kwargs)
+                           daq_class=daq_class, daq_kwargs=daq_kwargs,
+                           audio_class=audio_class, audio_kwargs=audio_kwargs)
 
     # Register any server-side functions to be called from the client, e.g.
     #   manager.target('root').hello_server()
