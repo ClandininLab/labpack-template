@@ -21,7 +21,10 @@ rig_config:  # One entry per rig; the GUI asks which one you are on at startup.
   Laptop:  # Everything on one machine: the GUI starts its own local server.
     data_directory: /home/johndoe/Desktop
     screen_center: [0, 0]      # rig-specific offset added by protocol.adjust_center()
-    loco_available: False
+    # True even with no tracker attached: stimpack's default local server includes KeyTrac, a
+    # keyboard stand-in, so closed-loop protocols (do_loco) run on a bare laptop. Set False only
+    # to hide the do_loco checkbox from a rig where locomotion would be meaningless.
+    loco_available: True
     server_options:
       use_remote_server: False
 
