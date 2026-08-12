@@ -116,15 +116,22 @@ def main():
     # to send acquisition triggers / opto waveforms from this server.
     daq_class, daq_kwargs = None, {}
 
-    # # # Audio (optional) # # #
-    # A sound card driven from protocols as target('audio'). Left off by default on purpose:
-    # with no audio module registered, audio calls report warnings instead of pretending to
-    # play. Uncomment on a rig with a card and the audio extra installed
-    # (pip install stimpack[audio], plus PortAudio system-side). stimpack's own local server
-    # probes the default output and enables this automatically; a rig server opts in explicitly.
-    audio_class, audio_kwargs = None, {}
-    # from stimpack.audio import PyAudioManager
-    # audio_class, audio_kwargs = PyAudioManager, {}
+    # # # Audio # # #
+    # Present when this machine can play, absent when it cannot -- the same probe stimpack's own
+    # local server uses. The probe answers three questions at once (PyAudio installed, PortAudio
+    # starts, an output device exists) and returns the device's own rate so nothing is resampled.
+    # PortAudio sprays ALSA/JACK lines on stderr while it enumerates devices; that noise is normal
+    # on Linux and not an error. With no module registered, audio calls report warnings instead of
+    # pretending to play, so a rig without a card can leave this block exactly as it is.
+    from stimpack.audio import PyAudioManager
+    from stimpack.audio import util as audio_util
+
+    device_rate, no_audio_reason = audio_util.probe_default_output()
+    if device_rate is not None:
+        audio_class, audio_kwargs = PyAudioManager, {'sample_rate': device_rate}
+    else:
+        audio_class, audio_kwargs = None, {}
+        print(f'Audio output: none ({no_audio_reason})')
 
     # # # Server # # #
     # host: stimpack defaults to loopback (127.0.0.1) since the RPC channel is unauthenticated.

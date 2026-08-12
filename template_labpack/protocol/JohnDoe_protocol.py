@@ -62,6 +62,46 @@ class DriftingSquareGrating(BaseProtocol):
                 'all_combinations': True,
                 'randomize_order': True}
 
+# %% An audio protocol, playing this labpack's own sound
+
+class AudioSweep(BaseProtocol):
+    """
+    Play the labpack's FrequencySweep sound (template_labpack/audio/sounds.py).
+
+    Sounds are not protocols, so FrequencySweep itself never appears in the GUI's dropdown: a
+    protocol names it in a stimulus descriptor, exactly the way visual protocols name a stimulus
+    class, and the descriptor's 'target' is what routes it to the audio module instead of the
+    screens. The class reaches the server because module_paths.audio_stim names its directory.
+
+    Runs anywhere: on a machine that cannot play (no sound card, or no stimpack[audio]), the
+    server has no audio module and each trial reports a warning instead of pretending to play.
+    """
+
+    def get_trial_parameters(self):
+        super().get_trial_parameters()
+
+        self.trial_stim_parameters = {'name': 'FrequencySweep',
+                                      'target': 'audio',
+                                      'duration': self.trial_protocol_parameters['stim_time'],
+                                      'f_start': self.trial_protocol_parameters['f_start'],
+                                      'f_end': self.trial_protocol_parameters['f_end'],
+                                      'volume': self.trial_protocol_parameters['volume']}
+
+    def get_protocol_parameter_defaults(self):
+        return {'pre_time': 0.5,
+                'stim_time': 2.0,
+                'tail_time': 0.5,
+
+                'f_start': 100.0,
+                'f_end': [300.0, 900.0],   # a swept dimension: shallow and steep sweeps alternate
+                'volume': 0.5}
+
+    def get_run_parameter_defaults(self):
+        return {'num_trials': 4,
+                'idle_color': 0.5,
+                'all_combinations': True,
+                'randomize_order': True}
+
 # %%
 
 class MovingEllipsoid(BaseProtocol):
