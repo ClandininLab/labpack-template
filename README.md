@@ -1,7 +1,11 @@
+<img src="https://raw.githubusercontent.com/ClandininLab/stimpack/main/stimpack/_assets/labpack_icon.svg" align="left" width="90" alt="labpack: two display screens angled around a subject, in labpack yellow"/>
+
 # labpack-template
 
 A template for your lab-specific [Stimpack](https://github.com/ClandininLab/stimpack) configuration:
 rig configs, protocols, custom stimuli, and device drivers.
+
+<br clear="left"/>
 
 [Stimpack documentation and quick start](https://stimpack.readthedocs.io/en/latest/)
 
