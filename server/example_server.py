@@ -126,9 +126,10 @@ def main():
     from stimpack.audio import PyAudioManager
     from stimpack.audio import util as audio_util
 
-    device_rate, no_audio_reason = audio_util.probe_default_output()
+    device_rate, device_channels, no_audio_reason = audio_util.probe_default_output()
     if device_rate is not None:
-        audio_class, audio_kwargs = PyAudioManager, {'sample_rate': device_rate}
+        audio_class = PyAudioManager
+        audio_kwargs = {'sample_rate': device_rate, 'channels': device_channels}
     else:
         audio_class, audio_kwargs = None, {}
         print(f'Audio output: none ({no_audio_reason})')
