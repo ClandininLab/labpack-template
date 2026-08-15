@@ -1,7 +1,11 @@
+<img src="https://raw.githubusercontent.com/ClandininLab/stimpack/main/stimpack/_assets/labpack_icon.svg" align="left" width="90" alt="labpack: two display screens angled around a subject, in labpack yellow"/>
+
 # labpack-template
 
 A template for your lab-specific [Stimpack](https://github.com/ClandininLab/stimpack) configuration:
 rig configs, protocols, custom stimuli, and device drivers.
+
+<br clear="left"/>
 
 [Stimpack documentation and quick start](https://stimpack.readthedocs.io/en/latest/)
 
@@ -86,11 +90,12 @@ stimpack --check-labpack        # validates this labpack against the installed s
 | `template_labpack/protocol/base_protocol.py` | Lab-wide protocol base. Put helpers shared by all your protocols here. |
 | `template_labpack/protocol/JohnDoe_protocol.py` | Example protocols. Rename to `<you>_protocol.py` and write your own; every `BaseProtocol` subclass appears in the GUI dropdown. |
 | `template_labpack/visual_stim/example/` | Custom stimuli, shapes, trajectories and distributions. These are exec'd **on the server**; subclasses of stimpack's `BaseProgram` / `Trajectory` / `Distribution` become usable by name. |
-| `template_labpack/device/daq.py` | DAQ drivers (NI, LabJack) and the `DAQonServer` proxy used when the DAQ lives on the rig machine. Referenced by the `trigger:` string in a rig config. |
+| `template_labpack/audio/` | Custom sound classes, sent to the server's audio module via `module_paths.audio_stim`. Subclasses of stimpack's `BaseSound` become usable by name from a stimulus descriptor with `target: 'audio'`. |
+| `template_labpack/daq/` | DAQ drivers (NI, LabJack) and the `DAQonServer` proxy used when the DAQ lives on the rig machine. Referenced by the `trigger:` string in a rig config. |
 | `template_labpack/device/dlpc350.py` | TI DLPC350 projectors (LightCrafter 4500 and the optical engines built on it). Sets pattern mode, LED currents, and can display the three color channels of a frame as successive patterns — a 120 Hz link driving the DMD at 360 Hz. |
-| `template_labpack/device/locomotion/` | Locomotion managers (e.g. FicTrac). Subclass stimpack's `LocoClosedLoopManager` and implement `_parse_line`. |
+| `template_labpack/locomotion/` | Locomotion managers (e.g. FicTrac). Subclass stimpack's `LocoClosedLoopManager` and implement `_parse_line`. |
 | `template_labpack/client.py`, `template_labpack/data.py` | Empty passthroughs over stimpack's `BaseClient` / `BaseData` — override here if you need custom client behavior or a different data layout. |
-| `server/example_server.py` | Example rig server: screen geometry, locomotion, DAQ. Copy one per rig. |
+| `server/example_server.py` | Example rig server: screen geometry, locomotion, DAQ, audio. Copy one per rig. |
 | `server/base_server.py` | Lab-wide server base; forwards everything to stimpack's `BaseServer`. |
 | `tests/` | Your tests. Hardware drivers can be stubbed and the bytes they would send checked against the manufacturer's documentation, with no rig attached — see `tests/README.md`. |
 

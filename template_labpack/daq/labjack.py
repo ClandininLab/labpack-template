@@ -1,111 +1,17 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+"""LabJack T-series DAQs, with waveform stream-out.
 
-from typing import Optional
-
-from stimpack.device import daq
-from stimpack.rpc.multicall import MyMultiCall
-
+NOTE: the vendor import (labjack ljm) lives inside init_device, not up here, so this file stays
+importable on machines without the LabJack driver -- see ni.py for why. It is kept on self so
+every other method can reach it without re-importing. The extra is per rig: pip install -e .[labjack].
+"""
 import numpy as np
 import time
 import threading
 
-# NOTE: the vendor imports (nidaqmx, labjack ljm) live inside the classes that use them, not up
-# here. Stimpack imports this whole module on every client start -- before it knows whether the
-# rig config names a trigger at all -- so a module-level vendor import would crash the client on
-# any machine without that vendor's driver installed (a laptop, or a rig with only the other
-# vendor's hardware). The extras are per rig on purpose: pip install -e .[nidaq] / .[labjack].
+from stimpack import daq
 
-# %%
-class DAQonServer(daq.DAQonServer):
-    '''
-    Dummy DAQ class for when the DAQ resides on the server, so that we can call methods as if the DAQ is on the client side.
-
-    Calls are addressed to the server's 'voltage_out' module with target('voltage_out'), so the
-    method names here are just the driver's own method names (e.g. LabJackTSeries.start_stream).
-    'voltage_out' is the current name of what used to be called the 'daq' module; target('daq')
-    still resolves to it, but with a one-time deprecation warning. Note the even older style -- an
-    untargeted call to a "daq_"-prefixed name -- no longer works at all: untargeted requests are
-    routed to the server's root node, where those names are not registered, so they would silently
-    do nothing.
-    '''
-    def setup_pulse_wave_stream_out(self, multicall:Optional[MyMultiCall]=None, **kwargs):
-        if multicall is not None and isinstance(multicall, MyMultiCall):
-            multicall.target('voltage_out').setup_pulse_wave_stream_out(**kwargs)
-            return multicall
-        if self.manager is not None:
-            self.manager.target('voltage_out').setup_pulse_wave_stream_out(**kwargs)
-
-    def start_stream(self, multicall:Optional[MyMultiCall]=None, **kwargs):
-        if multicall is not None and isinstance(multicall, MyMultiCall):
-            multicall.target('voltage_out').start_stream(**kwargs)
-            return multicall
-        if self.manager is not None:
-            self.manager.target('voltage_out').start_stream(**kwargs)
-
-    def stop_stream(self, multicall:Optional[MyMultiCall]=None, **kwargs):
-        if multicall is not None and isinstance(multicall, MyMultiCall):
-            multicall.target('voltage_out').stop_stream(**kwargs)
-            return multicall
-        if self.manager is not None:
-            self.manager.target('voltage_out').stop_stream(**kwargs)
-
-    def stream_with_timing(self, multicall:Optional[MyMultiCall]=None, **kwargs):
-        if multicall is not None and isinstance(multicall, MyMultiCall):
-            multicall.target('voltage_out').stream_with_timing(**kwargs)
-            return multicall
-        if self.manager is not None:
-            self.manager.target('voltage_out').stream_with_timing(**kwargs)
-
-
-# %% National instruments USB daqs
-class NIUSB6001(daq.DAQ):
-    """
-    https://www.ni.com/en-us/support/model.usb-6001.html
-    """
-    def __init__(self, dev='Dev1', trigger_channel='port2/line0'):
-        super().__init__()  # call the parent class init method
-        self.dev = dev
-        self.trigger_channel = trigger_channel
-
-    def send_trigger(self):
-        import nidaqmx  # local so machines without NI drivers can still import this module
-        with nidaqmx.Task() as task:
-            task.do_channels.add_do_chan('{}/{}'.format(self.dev, self.trigger_channel))
-            task.start()
-            task.write([True, False])
-
-
-class NIUSB6210(daq.DAQ):
-    """
-    https://www.ni.com/en-us/support/model.usb-6210.html
-    """
-    def __init__(self, dev='Dev5', trigger_channel='ctr0'):
-        super().__init__()  # call the parent class init method
-        self.dev = dev
-        self.trigger_channel = trigger_channel
-
-    def send_trigger(self):
-        import nidaqmx  # local so machines without NI drivers can still import this module
-        with nidaqmx.Task() as task:
-            task.co_channels.add_co_pulse_chan_time('{}/{}'.format(self.dev, self.trigger_channel),
-                                                    low_time=0.002,
-                                                    high_time=0.001)
-            task.start()
-
-    def output_step(self, output_channel='ctr1', low_time=0.001, high_time=0.100, initial_delay=0.00):
-        import nidaqmx  # local so machines without NI drivers can still import this module
-        with nidaqmx.Task() as task:
-            task.co_channels.add_co_pulse_chan_time('{}/{}'.format(self.dev, output_channel),
-                                                    low_time=low_time,
-                                                    high_time=high_time,
-                                                    initial_delay=initial_delay)
-
-            task.start()
-            task.wait_until_done()
-            task.stop()
-
-# %% LabJack
 
 class LabJackTSeries(daq.DAQ):
     def __init__(self, dev=None, trigger_channel=['FIO4'], init_device=True):
@@ -119,7 +25,7 @@ class LabJackTSeries(daq.DAQ):
 
     def init_device(self):
         # Imported here rather than at module top so this file stays importable on machines
-        # without the LabJack driver -- see the note above the class definitions. Kept on self so
+        # without the LabJack driver -- see the note at the top of this file. Kept on self so
         # every other method can reach it without re-importing.
         from labjack import ljm
         self.ljm = ljm

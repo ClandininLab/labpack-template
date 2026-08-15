@@ -6,11 +6,8 @@ and then runs the socket server that a client/GUI connects to.
 Run it directly:      python server/example_server.py
 Or point a config at it:  rig_config.<rig>.server_options.local_server_path: server/example_server.py
 """
-import os
-import sys
 
-from stimpack.device.locomotion.loco_managers.keytrac_managers import KeytracClosedLoopManager
-from stimpack.util import ROOT_DIR
+from stimpack.locomotion.keytrac import KeytracClosedLoopManager
 from stimpack.visual_stim.screen import Screen, SubScreen
 
 from base_server import BaseServer
@@ -87,17 +84,16 @@ def main():
     loco_kwargs = {
         'host': '127.0.0.1',
         'port': 33335,
-        'python_bin': sys.executable,
-        'kt_py_fn': os.path.join(ROOT_DIR, 'device', 'locomotion', 'keytrac', 'keytrac.py'),
+        # python_bin and kt_py_fn are omitted: the defaults are this interpreter and the app stimpack ships.
         'relative_control': True,
     }
 
-    # FicTrac wiring, using this labpack's own manager (template_labpack/device/locomotion/).
+    # FicTrac wiring, using this labpack's own manager (template_labpack/locomotion/).
     # Left commented because it launches the fictrac binary at the paths below, which only exist
     # on a machine with FicTrac installed. Uncomment on a rig that has one, replacing the two
     # paths, and delete the KeyTrac assignment above.
     #
-    # from template_labpack.device.locomotion.loco_managers.fictrac_managers import FtClosedLoopManager
+    # from template_labpack.locomotion.fictrac import FtClosedLoopManager
     #
     # loco_class = FtClosedLoopManager
     # loco_kwargs = {
@@ -116,9 +112,27 @@ def main():
     # }
 
     # # # DAQ (optional) # # #
-    # Set daq_class to a DAQ subclass from template_labpack/device/daq.py (e.g. NIUSB6001, LabJackTSeries)
+    # Set daq_class to a DAQ subclass from template_labpack/daq/ (ni.py, labjack.py)
     # to send acquisition triggers / opto waveforms from this server.
     daq_class, daq_kwargs = None, {}
+
+    # # # Audio # # #
+    # Present when this machine can play, absent when it cannot -- the same probe stimpack's own
+    # local server uses. The probe answers three questions at once (PyAudio installed, PortAudio
+    # starts, an output device exists) and returns the device's own rate so nothing is resampled.
+    # PortAudio sprays ALSA/JACK lines on stderr while it enumerates devices; that noise is normal
+    # on Linux and not an error. With no module registered, audio calls report warnings instead of
+    # pretending to play, so a rig without a card can leave this block exactly as it is.
+    from stimpack.audio import PyAudioManager
+    from stimpack.audio import util as audio_util
+
+    device_rate, device_channels, no_audio_reason = audio_util.probe_default_output()
+    if device_rate is not None:
+        audio_class = PyAudioManager
+        audio_kwargs = {'sample_rate': device_rate, 'channels': device_channels}
+    else:
+        audio_class, audio_kwargs = None, {}
+        print(f'Audio output: none ({no_audio_reason})')
 
     # # # Server # # #
     # host: stimpack defaults to loopback (127.0.0.1) since the RPC channel is unauthenticated.
@@ -126,7 +140,8 @@ def main():
     server = ExampleServer(host='127.0.0.1', port=60629,
                            visual_stim_kwargs=visual_stim_kwargs,
                            loco_class=loco_class, loco_kwargs=loco_kwargs,
-                           daq_class=daq_class, daq_kwargs=daq_kwargs)
+                           daq_class=daq_class, daq_kwargs=daq_kwargs,
+                           audio_class=audio_class, audio_kwargs=audio_kwargs)
 
     # Register any server-side functions to be called from the client, e.g.
     #   manager.target('root').hello_server()

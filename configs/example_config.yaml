@@ -2,11 +2,13 @@ experimenter: JohnDoe
 
 # Which storage backend to write. Also selectable in the startup dialog, which starts from
 # whatever is set here.
-#   hdf5         one .hdf5 file per experiment (default)
-#   legacy_hdf5  the same, in the pre-0.3 layout: epoch_runs/series_001/epochs/epoch_001
-#   nwb          a DIRECTORY per experiment, holding one .nwb file per series
-# Ignored if module_paths.data below names your own data class -- see the note there.
-data_format: hdf5
+#   nwb          a DIRECTORY per experiment, holding one .nwb file per series -- the community
+#                standard (https://www.nwb.org/), and what new labs should reach for
+#   hdf5         one .hdf5 file per experiment, in stimpack's own layout
+#   legacy_hdf5  the same, in the pre-1.0 layout: epoch_runs/series_001/epochs/epoch_001
+# Omitting this key means hdf5. Ignored if module_paths.data below names your own data class --
+# see the note there.
+data_format: nwb
 
 subject_metadata:  # Any metadata you want to collect per subject; each becomes a dropdown in the GUI.
                    # The GUI has built-ins for subject_id, age and notes.
@@ -19,7 +21,10 @@ rig_config:  # One entry per rig; the GUI asks which one you are on at startup.
   Laptop:  # Everything on one machine: the GUI starts its own local server.
     data_directory: /home/johndoe/Desktop
     screen_center: [0, 0]      # rig-specific offset added by protocol.adjust_center()
-    loco_available: False
+    # True even with no tracker attached: stimpack's default local server includes KeyTrac, a
+    # keyboard stand-in, so closed-loop protocols (do_loco) run on a bare laptop. Set False only
+    # to hide the do_loco checkbox from a rig where locomotion would be meaningless.
+    loco_available: True
     server_options:
       use_remote_server: False
 
@@ -27,6 +32,10 @@ rig_config:  # One entry per rig; the GUI asks which one you are on at startup.
     data_directory: /home/johndoe/Desktop
     screen_center: [0, 0]
     loco_available: True
+    # audio_available: True   # promise a sound card, so protocols can branch on it before a server
+    #                         # is connected. Needs pip install stimpack[audio] plus PortAudio
+    #                         # system-side; --check-labpack warns when a machine cannot keep the
+    #                         # promise.
 
     # Anything else here is yours: stimpack passes rig_config through untouched, so put rig-specific
     # hardware details in your own keys and read them in your labpack protocol. Stimpack knows the
@@ -57,6 +66,11 @@ parameter_presets_dir: presets/johndoe   # where your saved parameter presets li
 module_paths:
   protocol:  # user protocol classes; may be a list of modules
     - template_labpack/protocol/JohnDoe_protocol.py
+    # Rig commissioning and diagnostic protocols that ship with stimpack but are not loaded by
+    # default (SubframeTimingCheck, ScreenAlignmentCheck, ProjectorCenterBeam, ServerErrorDemo).
+    # Uncomment while setting a rig up or hunting a fault; the stimpack: prefix resolves against
+    # wherever stimpack is installed, so the line is correct on every machine.
+    # - stimpack:experiment/diagnostics_protocol.py
   # data: template_labpack/data.py    # class must be named "Data".
   #   Commented out on purpose -- template_labpack/data.py as shipped adds nothing to stimpack's
   #   own class, and naming ONE data module fixes the format (the class's base decides it), so
@@ -77,9 +91,13 @@ module_paths:
   #       legacy_hdf5: template_labpack/data.py:DataLegacy
   #       nwb:         template_labpack/data_nwb.py
   client: template_labpack/client.py  # class must be named "Client". Only one module.
-  daq: template_labpack/device/daq.py # daq module.                   Only one module.
+  daq: template_labpack/daq/__init__.py  # daq module.                   Only one module.
   visual_stim:  # custom stimulus modules, exec'd on the SERVER; may be a list of directories
     - template_labpack/visual_stim/example
+  audio_stim:  # custom sound classes, sent to the server's audio module; may be a list of directories
+    - template_labpack/audio
+    # Safe to keep even though the template starts without a sound card: sounds load only on rigs
+    # whose server has an audio module, and a silent rig skips this entry without a warning.
 
 # NOTE: custom stimuli belong under module_paths.visual_stim (above). An older layout put them in
 # server_options.visual_stim_module_paths -- current stimpack does NOT read that key, so stimuli
