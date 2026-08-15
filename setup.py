@@ -17,7 +17,12 @@ setup(
     packages=find_packages(),
     python_requires='>=3.10',   # stimpack uses PEP 604 (X | Y) unions at import time
     install_requires=[
-        'stimpack',       # the framework this package customizes
+        # >=1.0: this template uses the 1.0 API (module contract, audio_stim, trial/series
+        # vocabulary). An older stimpack does not merely fail its checks -- `stimpack
+        # --check-labpack` did not exist before 1.0, so the flags fall through to launching the
+        # GUI, whose startup dialog waits forever for input that never comes on a headless
+        # runner. CI hung for hours on exactly that.
+        'stimpack>=1.0',  # the framework this package customizes
         'numpy',
         'scipy',
         'icosphere',      # used by visual_stim/example/shapes.py (GlIcosphere)

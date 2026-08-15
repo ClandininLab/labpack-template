@@ -8,6 +8,7 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    timeout-minutes: 20        # the whole job; the default is six hours
     strategy:
       fail-fast: false
       matrix:
@@ -42,6 +43,12 @@ jobs:
       # runs them. This is what notices stimpack changing how labpacks talk to it, since a
       # template copy has no git history to pull fixes from (see README).
       - name: Check labpack
+        # A hard cap, because the failure mode here is a hang, not an error: a stimpack too old
+        # to know --check-labpack falls through to launching the GUI, and its startup dialog
+        # waits forever for input a runner cannot give. Three jobs sat for hours before anyone
+        # noticed. setup.py now requires stimpack>=1.0, so this should never fire -- but a job
+        # that stops should say so in minutes, not at the six-hour default.
+        timeout-minutes: 5
         env:
           QT_QPA_PLATFORM: offscreen   # the client module imports PyQt6; no display on a runner
         run: stimpack --check-labpack --deep --labpack-dir .
@@ -50,4 +57,5 @@ jobs:
       # checked is the bytes a driver would send and the shape of the protocols -- the things that
       # are wrong silently.
       - name: Tests
+        timeout-minutes: 10
         run: pytest -m "not hardware"
