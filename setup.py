@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='template_labpack',
-    version='0.0.1',
+    version='1.0.0',
     description='Lab-specific stimuli, protocols and rig configuration to be used with stimpack',
     url='https://github.com/ClandininLab/labpack-template',
     author='Max Turner, Minseung Choi',
