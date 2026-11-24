@@ -34,28 +34,41 @@ at runtime.
    every data file it records (with a `.dirty` marker when the tree has uncommitted changes), so
    committing before recording is what makes an experiment answerable a year later.
 
-2. Rename the Python package for your lab, then install it (Python >= 3.10; `stimpack` comes as a
+2. Name the labpack for your lab, then install it (Python >= 3.10; `stimpack` comes as a
    dependency):
    ```
-   python scripts/rename_package.py smithlab_pack   # --dry-run first, to see what it will touch
+   python scripts/rename_package.py smith   # --dry-run first, to see what it will touch
    pip install -e .
    ```
-   Add hardware drivers only if the rig needs them: `pip install -e .[nidaq]` or `.[labjack]`.
+   That makes the package `smith_labpack` and the lab's stimulus directory `visual_stim/smith`
+   (`--package` and `--stim-dir` choose other names). Add hardware drivers only if the rig needs
+   them: `pip install -e .[nidaq]` or `.[labjack]`.
 
-   The package here is called `template_labpack` so it can be installed side by side with an
-   existing labpack. Renaming it means yours can be too — and that a traceback says whose code it
-   is in. The script updates the four places that have to agree: the package directory,
-   `name`/`packages` in `setup.py`, the `from template_labpack...` imports, and the `module_paths`
-   entries in every config.
+   The template's names are generic so it can be installed side by side with an existing labpack.
+   Renaming means yours can be too, and that a traceback says whose code it is in. The script
+   changes everything that has to agree, together: the package directory, `name`/`packages` in
+   `setup.py`, the package imports, the `module_paths` entries in every config, and the stimulus
+   directory with the imports inside it. That last one matters: `stimuli.py` is loaded by file
+   path, but the helpers it imports are imported by package path, so renaming that directory by
+   hand leaves a stale import and the server loads none of your stimuli.
 
    Stimpack never imports your labpack by name. It resolves the directory recorded in
    `path_to_labpack.txt` and loads your modules by file path, so the name is yours to choose.
 
-3. Launch the GUI (`stimpack`) and use **Labpack Dir** in the startup dialog to point at this
-   directory. The choice is remembered in `path_to_labpack.txt` in stimpack's user config dir.
+3. Add each person who will run experiments, once:
+   ```
+   python scripts/add_user.py jd --name "Jane Doe"
+   ```
+   creates `configs/jd_config.yaml` (experimenter, presets directory and protocol module filled
+   in), `<package>/protocol/jd_protocol.py` (the template's example protocols, to edit; `--empty`
+   for a skeleton) and `presets/jd/`. A labpack belongs to the lab; configs, protocols and presets
+   belong to people, which is why this is a separate step.
 
-4. Copy `configs/example_config.yaml` to `configs/<yourlab>_config.yaml` and edit it. It appears in
-   the startup dialog's config dropdown.
+4. Launch the GUI (`stimpack`), use **Labpack Dir** in the startup dialog to point at this
+   directory, and pick your config. The directory is remembered in `path_to_labpack.txt` in
+   stimpack's user config dir. Then edit your config's `rig_config` for your rigs.
+
+5. Check it: `stimpack --check-labpack --deep`.
 
 ## Tests
 
@@ -88,7 +101,7 @@ stimpack --check-labpack        # validates this labpack against the installed s
 | `configs/*.yaml` | Rig configs: experimenter, subject metadata fields, per-rig settings, and `module_paths`. **Start here.** |
 | `presets/johndoe/` | Saved parameter presets, one YAML file per protocol — the GUI's **Save preset** writes here, and a worked example ships in `DriftingSquareGrating.yaml`. Ensembles — ordered queues of (protocol, preset) pairs the GUI runs back to back — are saved as `.spens` files, plain YAML lists of those pairs, and reference presets by name. |
 | `template_labpack/protocol/base_protocol.py` | Lab-wide protocol base. Put helpers shared by all your protocols here. |
-| `template_labpack/protocol/JohnDoe_protocol.py` | Example protocols. Rename to `<you>_protocol.py` and write your own; every `BaseProtocol` subclass appears in the GUI dropdown. |
+| `template_labpack/protocol/JohnDoe_protocol.py` | Example protocols. `scripts/add_user.py` copies them to `<you>_protocol.py` for each person; every `BaseProtocol` subclass appears in the GUI dropdown. |
 | `template_labpack/visual_stim/example/` | Custom stimuli, shapes, trajectories and distributions. These are exec'd **on the server**; subclasses of stimpack's `BaseProgram` / `Trajectory` / `Distribution` become usable by name. |
 | `template_labpack/audio/` | Custom sound classes, sent to the server's audio module via `module_paths.audio_stim`. Subclasses of stimpack's `BaseSound` become usable by name from a stimulus descriptor with `target: 'audio'`. |
 | `template_labpack/daq/` | DAQ drivers (NI, LabJack) and the `DAQonServer` proxy used when the DAQ lives on the rig machine. Referenced by the `trigger:` string in a rig config. |
@@ -97,6 +110,7 @@ stimpack --check-labpack        # validates this labpack against the installed s
 | `template_labpack/client.py`, `template_labpack/data.py` | Empty passthroughs over stimpack's `BaseClient` / `BaseData` — override here if you need custom client behavior or a different data layout. |
 | `server/example_server.py` | Example rig server: screen geometry, locomotion, DAQ, audio. Copy one per rig. |
 | `server/base_server.py` | Lab-wide server base; forwards everything to stimpack's `BaseServer`. |
+| `scripts/` | `rename_package.py` names the labpack for your lab (run once); `add_user.py` adds a person's config, protocol module and presets (run per person). |
 | `tests/` | Your tests. Hardware drivers can be stubbed and the bytes they would send checked against the manufacturer's documentation, with no rig attached — see `tests/README.md`. |
 
 ## Notes
